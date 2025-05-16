@@ -1,0 +1,98 @@
+/* Estilos generales para la página de contacto */
+.contact-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.contact-container h1 {
+  text-align: center;
+  color: #333;
+}
+
+.contact-container p {
+  text-align: center;
+  color: #666;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-form div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.contact-form label {
+  font-weight: bold;
+  margin-right: 10px;
+  width: 150px;
+}
+
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.contact-form label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.contact-form button {
+  width: 100px;
+  padding: 10px 15px;
+  background-color: #000000;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.contact-form button:hover {
+  background-color: #ffffff;
+  color: #000000;
+  border: #000000 1px solid;
+}
+
+.contact-advisor {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.contact-advisor h2 {
+  color: #333;
+}
+
+.contact-advisor p {
+  color: #666;
+}
+
+.contact-advisor-button {
+  padding: 10px 15px;
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.contact-advisor-button:hover {
+  background-color: #218838;
+}

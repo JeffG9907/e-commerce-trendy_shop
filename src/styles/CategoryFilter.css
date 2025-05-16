@@ -1,0 +1,371 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+body {
+  font-family: 'Roboto', sans-serif;
+}
+
+.category-carousel {
+  padding: 2rem 0;
+}
+
+.category-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 25px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0; /* Asegúrate de que no haya margen aquí */
+}
+
+.category-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.category-image {
+  height: 430px;
+  width: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+
+.category-card:hover .category-image {
+  transform: scale(1.1);
+}
+
+.slick-slide {
+  padding: 0 10px; /* Espaciado entre tarjetas */
+  box-sizing: border-box;
+}
+
+.slick-arrow {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.category-prev, .category-next {
+  background: white !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  color: #000000;
+}
+
+.category-prev {
+  left: 10px !important;
+}
+
+.category-next {
+  right: 10px !important;
+}
+
+.category-prev:hover, .category-next:hover {
+  background: #000000 !important;
+  color: white;
+}
+
+.product-prev, .product-next {
+  background: black !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  color: white;
+}
+
+.product-prev {
+  left: 10px !important;
+}
+
+.product-next {
+  right: 10px !important;
+}
+
+.product-prev:hover, .product-next:hover {
+  background: #ffffff !important;
+  color: black;
+}
+
+.slick-dots {
+  bottom: -20px;
+}
+
+.slick-dots li button:before {
+  font-size: 12px;
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+  width: 100%;
+  height: 250px !important;
+  object-fit: contain !important;
+  background-color: #f5f5f5;
+}
+
+.product-carousel .slick-slide {
+  height: 500px;
+}
+
+.product-carousel .slick-slider {
+  height: 500px;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.product-image {
+  width: 100%;
+  height: 250px;
+  object-fit: contain !important;
+  background-color: #f5f5f5;
+}
+
+.product-carousel .slick-slide {
+  height: 250px;
+}
+
+.product-carousel .slick-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.product-carousel .slick-slide {
+  height: 250px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.product-carousel .slick-slide > div {
+  height: 100%;
+}
+
+.product-carousel .slick-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block !important;
+}
+
+.product-carousel .slick-slider {
+  height: 250px;
+}
+
+.product-carousel .slick-dots {
+  bottom: -20px;
+  margin-bottom: 5px;
+}
+
+.product-carousel .slick-dots li button:before {
+  font-size: 8px;
+  color: #333;
+}
+
+.product-carousel .slick-dots li.slick-active button:before {
+  color: #000;
+}
+
+.custom-dots {
+  position: absolute;
+  bottom: -25px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  text-align: center;
+  z-index: 1;
+}
+
+.custom-dots li button:before {
+  color: #333;
+  text-shadow: none;
+}
+
+.product-carousel .slick-slide {
+  height: 250px;
+  overflow: hidden;
+}
+
+.product-carousel .slick-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-carousel .slick-prev,
+.product-carousel .slick-next {
+  width: 20px;
+  height: 20px;
+  z-index: 2;
+}
+
+.product-carousel .slick-prev {
+  left: 5px !important;
+}
+
+.product-carousel .slick-next {
+  right: 5px !important;
+}
+.product-card .slick-dots {
+  bottom: 5px;
+}
+
+.product-card .slick-dots li button:before {
+  color: white;
+  opacity: 0.8;
+}
+
+.product-card .slick-dots li.slick-active button:before {
+  color: white;
+  opacity: 1;
+}
+
+.product-card .slick-slide {
+  height: 200px;
+}
+
+.product-card .slick-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-carousel .slick-dots {
+  bottom: -20px;
+}
+
+.product-carousel .slick-dots li button:before {
+  color: white;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.product-carousel .slick-dots li.slick-active button:before {
+  color: white;
+}
+
+.product-carousel:hover .slick-slider {
+  animation-play-state: paused;
+}
+
+.custom-dots {
+  position: absolute;
+  bottom: -20px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  text-align: center;
+  z-index: 1;
+}
+
+.custom-dots li {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin: 0 5px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.custom-dots li button {
+  font-size: 0;
+  line-height: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  padding: 5px;
+  cursor: pointer;
+  color: transparent;
+  border: 0;
+  outline: none;
+  background: transparent;
+}
+
+.custom-dots li button:before {
+  content: '•';
+  font-size: 30px;
+  line-height: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  opacity: 0.75;
+}
+
+.custom-dots li.slick-active button:before {
+  opacity: 1;
+}
+
+.product-actions {
+  display: flex;
+  padding: 8px;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.product-actions button {
+  flex: 0 0 auto;
+  min-width: 90px;
+  margin: 0 4px;
+}
+
+.product-actions .details-button {
+  background-color: transparent;
+  color: #007BFF;
+  border: 1px solid #007BFF;
+  border-radius: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+.product-actions .details-button:hover {
+  background-color: #007BFF;
+  color: white;
+}
+
+.product-actions .add-cart-button {
+  background-color: transparent;
+  color: #0dff00;
+  border: 1px solid #10ff0c;
+  border-radius: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+.product-actions .add-cart-button:hover {
+  background-color: #5dff12;
+  color: #ffffff;
+}
+
+.product-actions .add-cart-button:disabled {
+  background-color: #cccccc;
+  border-color: #cccccc;
+  color: #666666;
+}

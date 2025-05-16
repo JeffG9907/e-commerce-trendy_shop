@@ -1,0 +1,44 @@
+.footer {
+  background-color: #000000;
+  color: white;
+  padding: 30px 0;
+  margin-top: auto;
+}
+
+.footer-section {
+  margin-bottom: 24px;
+}
+
+.footer-title {
+  margin-bottom: 16px;
+  font-weight: 200;
+}
+
+.footer .typography-body2 {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #ccc;
+}
+
+.footer-link {
+  color: white;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.social-icons {
+  display: flex;
+  gap: 8px;
+}
+
+.copyright {
+  text-align: center;
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

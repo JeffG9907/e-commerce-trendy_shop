@@ -1,0 +1,87 @@
+.MuiAppBar-root {
+  background-color: #000000 !important;
+}
+
+.navbar-logo {
+  height: 80px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.navbar-brand {
+  flex-grow: 0;
+  margin-right: 20px;
+}
+
+.navbar-logo {
+  height: 90px;
+  width: auto;
+}
+
+.navbar-search {
+  flex-grow: 1;
+  max-width: 450px;
+  margin-left: auto;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  color: black;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  font-size: 1.1rem;
+  padding: 4px 0;
+}
+
+.search-input .MuiOutlinedInput-input {
+  padding: 12px 14px;
+}
+
+.search-input .MuiOutlinedInput-root {
+  color: white;
+}
+
+.search-input .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.search-input:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.search-input.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: white;
+}
+
+.search-input .MuiInputAdornment-root .MuiSvgIcon-root {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-menu-item {
+  min-width: 120px;
+}
+
+@media (max-width: 768px) {
+  .navbar-search {
+    max-width: none;
+    margin: 10px 0;
+  }
+
+  .navbar-links {
+    display: none;
+  }
+
+  .navbar-brand {
+    margin-right: 10px;
+  }
+
+  .navbar-logo {
+    height: 30px;
+  }
+}

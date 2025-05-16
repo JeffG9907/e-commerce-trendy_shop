@@ -1,0 +1,32 @@
+.products-container {
+  padding-top: 64px;
+  padding-bottom: 64px;
+}
+
+.category-filter {
+  margin-bottom: 32px;
+}
+
+.product-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-image {
+  height: 200px;
+  object-fit: cover;
+}
+
+.product-content {
+  flex-grow: 1;
+}
+
+.product-price {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.product-actions {
+  padding: 16px;
+}

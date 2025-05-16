@@ -1,0 +1,56 @@
+/* Estilo personalizado para el contenedor principal */
+.main-container {
+    margin: 24px auto; /* Mismo margen arriba y abajo */
+    background-color: whitesmoke; /* Fondo */
+    padding: 20px; /* Espaciado interno */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Sombra */
+}
+
+
+/* Contenedor para la imagen */
+.image-box {
+    position: relative;
+    max-width: 200px; /* Ancho máximo */
+    max-height: 200px; /* Alto máximo */
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* Permite que el contenedor sea flexible */
+    height: auto; /* Ajusta el alto dinámicamente */
+}
+
+/* Tarjeta del producto */
+.product-card {
+    border-radius: 16px;
+    overflow: hidden;
+    width: 100%; /* Asegura que el contenedor ocupe todo el ancho disponible */
+    height: auto; /* Ajusta la altura automáticamente */
+}
+
+/* Imagen dentro del contenedor */
+.card-image {
+    object-fit: contain; /* Asegura que toda la imagen sea visible sin recortes */
+    object-position: center; /* Centra la imagen dentro del contenedor */
+    width: 100%; /* Ajusta el ancho automáticamente */
+    height: auto; /* Ajusta el alto automáticamente según la proporción */
+}
+
+/* Títulos principales */
+.product-title {
+    font-size: 3.5rem; /* Título grande */
+    font-weight: bold; /* Negrita */
+  }
+  
+  /* Precio del producto */
+  .product-price {
+    font-size: 1.25rem; /* Tamaño mediano */
+    color: gray; /* Color gris */
+  }
+  
+  /* Descripción del producto */
+  .product-description {
+    font-size: 1rem; /* Tamaño estándar */
+    line-height: 1.5; /* Espaciado entre líneas */
+  }

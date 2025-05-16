@@ -1,0 +1,28 @@
+.banner-container {
+  position: relative;
+  width: 95%;
+  height: 450px;
+  margin: 1.5rem auto;  /* Changed: added vertical and horizontal auto margin */
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.8);
+}
+
+.slogan {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-align: center;
+  font-weight: bold !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  font-family: 'Playfair Display', serif !important;
+}

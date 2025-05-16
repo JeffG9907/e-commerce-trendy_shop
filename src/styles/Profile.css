@@ -1,0 +1,126 @@
+/* Espaciado para el contenedor principal */
+.profile-container {
+  margin: 10px 0; /* Espaciado superior e inferior */
+  max-width: 1200px; /* Aumenta el ancho máximo del contenedor */
+  width: 100%; /* Asegura que ocupe el 100% hasta el máximo permitido */
+  padding: 0 10px; /* Añade un poco de espacio interno a los lados */
+  margin-left: auto; /* Centra el contenedor horizontalmente */
+  margin-right: auto; /* Centra el contenedor horizontalmente */
+}
+
+/* Estilo del papel o contenedor principal */
+.profile-paper {
+  padding: 32px;
+  margin-top: 32px;
+}
+
+/* Encabezado del perfil */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* Formulario del perfil */
+.profile-form {
+  padding: 1rem; /* Espaciado interno */
+  margin-top: 24px;
+}
+
+.profile-form .form-item {
+  margin-bottom: 16px; /* Espaciado uniforme entre los campos */
+}
+
+/* Clase base para todos los campos del formulario */
+.form-field {
+  margin-bottom: 16px; /* Espaciado inferior entre campos */
+}
+
+
+/* Información del perfil */
+.profile-info {
+  margin-bottom: 16px;
+}
+
+/* Acciones del perfil */
+.profile-actions {
+  display: flex;
+  gap: 16px; /* Espaciado entre botones */
+  margin-top: 24px;
+}
+
+.mapbox-container {
+  width: 100%; /* Asegura que el mapa ocupe todo el ancho del contenedor */
+  height: 100%; /* O puedes usar una altura fija como 400px */
+  min-height: 350px; /* Asegúrate de que tenga una altura mínima */
+  border-radius: 8px; /* Opcional: bordes redondeados */
+  border: 1px solid #ccc; /* Opcional: añade un borde */
+  overflow: hidden; /* Evita desbordamientos */
+}
+
+/* Texto de autorización */
+.authorization-text {
+  font-size: 12px; /* Ajusta el tamaño de fuente para mejor legibilidad */
+  line-height: 1.5; /* Espaciado entre líneas */
+  margin-top: 10px;
+  text-align: justify;
+}
+
+.authorization-text h6 {
+  font-size: 14px; /* Tamaño mayor para encabezados */
+  font-weight: bold;
+  text-align: center; /* Centra el texto del encabezado */
+}
+
+.authorization-text h5 {
+  font-size: 14px; /* Tamaño mayor para encabezados */
+  font-weight: normal;
+  text-align: justify; /* Justifica el texto */
+}
+
+.authorization-text table {
+  margin-top: 10px;
+  width: 100%; /* Asegura que la tabla ocupe el ancho completo */
+  border-collapse: collapse; /* Elimina espacios entre bordes */
+}
+
+.authorization-text table th,
+.authorization-text table td {
+  padding: 8px; /* Espaciado interno en celdas */
+  text-align: left; /* Alinea el texto a la izquierda */
+  font-size: 12px; /* Tamaño de fuente adecuado */
+}
+
+.authorization-text .MuiTypography-body2 {
+  margin-top: 8px; /* Espaciado superior */
+  font-weight: bold;
+  font-size: 12px; /* Tamaño de fuente adecuado */
+  text-align: left; /* Alinea el texto a la izquierda */
+}
+
+.profile-edit-button {
+  display: inline-block;       /* Asegura que el botón sea un bloque ajustado al contenido */
+  padding: 10px 20px;          /* Espaciado interno */
+  font-size: 16px;             /* Tamaño de la fuente */
+  width: 75px;
+  height: 50px;
+  font-weight: bold;           /* Fuente en negrita */
+  color: #fff;                 /* Texto blanco */
+  background-color: #007bff;   /* Azul primario */
+  border: none;                /* Sin bordes */
+  border-radius: 5px;          /* Bordes redondeados */
+  cursor: pointer;             /* Cambia el cursor al estilo de "mano" */
+  text-align: center;          /* Centra el texto */
+  transition: all 0.3s ease;   /* Transiciones suaves en hover y active */
+}
+
+.profile-edit-button:hover {
+  background-color: #0056b3;   /* Azul más oscuro al pasar el mouse */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+}
+
+.profile-edit-button:active {
+  background-color: #003d80;   /* Azul aún más oscuro al presionar */
+  transform: scale(0.98);      /* Efecto de "presionado" */
+}

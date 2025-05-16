@@ -1,0 +1,56 @@
+.logo-container {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.admin-logo {
+  height: 80px;
+  margin-right: 16px;
+}
+
+.admin-navbar {
+  background-color: #1976d2;
+}
+
+.logo-container {
+  flex-grow: 0;
+}
+
+.admin-logo {
+  height: 40px;
+  width: auto;
+  margin-right: 16px;
+}
+
+.nav-buttons {
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-button {
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.exit-button {
+  margin-left: 16px;
+}
+
+@media (max-width: 900px) {
+  .admin-logo {
+    height: 32px;
+  }
+  
+  .nav-button {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+  }
+}
+
+.nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}

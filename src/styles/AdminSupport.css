@@ -1,0 +1,49 @@
+.admin-support-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .admin-support-container h1 {
+    text-align: center;
+    color: #333;
+  }
+  
+  .support-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .support-table th, .support-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .support-table th {
+    background-color: #f4f4f4;
+  }
+  
+  .support-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .support-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  
+  button:hover {
+    background-color: #0056b3;
+  }

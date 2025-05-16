@@ -1,0 +1,80 @@
+.payment-section {
+  margin-bottom: 20px;
+}
+
+.order-summary {
+  margin-bottom: 24px;
+}
+
+.qr-container {
+  text-align: center;
+  padding: 15px;
+}
+
+.bank-account-card {
+  margin-bottom: 15px;
+  padding: 15px;
+  width: 160px;
+  height: 200px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.bank-account-card img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.bank-account-card strong {
+  font-size: 16px;
+}
+
+.bank-account-card .account-info {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.bank-account-card .account-info span {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.transfer-details {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+.transfer-details .line-reduced-spacing {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.transfer-details .line-reduced-spacing Typography {
+  display: block;
+  width: 100%;
+}
+
+.transfer-details h6 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-weight: bold;
+  color: #333;
+}
+
+.transfer-details .line-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Alineación vertical */
+  gap: 10px; /* Espacio mínimo entre elementos */
+}
+
+h6 {
+  font-size: 16px;
+  font-weight: bold;
+}

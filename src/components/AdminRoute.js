@@ -3,6 +3,7 @@ import './AdminRoute.css';
 
 import { Navigate } from 'react-router-dom';
 import { auth } from '../firebase/config';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 
 const AdminRoute = ({ children }) => {
@@ -14,14 +15,20 @@ const AdminRoute = ({ children }) => {
             try {
                 const user = auth.currentUser;
                 if (!user) {
+                    setLoading(false);
                     return;
                 }
+
+                // Check admin status in Firestore
+                const db = getFirestore();
+                const userDoc = await getDoc(doc(db, 'users', user.uid));
                 
-                const token = await user.getIdTokenResult();
-                setIsAdmin(!!token.claims.admin);
+                if (userDoc.exists()) {
+                    setIsAdmin(userDoc.data().role === 'admin');
+                }
+                setLoading(false);
             } catch (error) {
-                console.error("Error verificando admin:", error);
-            } finally {
+                console.error("Error checking admin status:", error);
                 setLoading(false);
             }
         };
@@ -29,7 +36,10 @@ const AdminRoute = ({ children }) => {
         checkAdminStatus();
     }, []);
 
-    if (loading) return <div>Cargando...</div>;
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     if (!isAdmin) {
         return (
             <div style={{
@@ -44,18 +54,24 @@ const AdminRoute = ({ children }) => {
                 zIndex: 1000,
                 textAlign: 'center'
             }}>
-                <p style={{ fontSize: '18px', marginBottom: '20px' }}>
+                <p style={{ 
+                    fontSize: '18px', 
+                    marginBottom: '20px',
+                    fontWeight: 'bold',
+                    color: '#d32f2f'
+                }}>
                     NO TIENE PERMISOS DE ADMINISTRADOR
                 </p>
                 <button 
                     onClick={() => window.location.href = "/"}
                     style={{
-                        padding: '8px 16px',
-                        backgroundColor: '#007bff',
+                        padding: '10px 20px',
+                        backgroundColor: '#1976d2',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        fontSize: '16px'
                     }}
                 >
                     Volver al inicio
@@ -63,7 +79,7 @@ const AdminRoute = ({ children }) => {
             </div>
         );
     }
-    
+
     return children;
 };
 

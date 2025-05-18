@@ -13,6 +13,7 @@ import { convertGoogleDriveUrl } from '../utils/googleDriveUtils'; // Importa la
 import MapboxPicker from '../components/MapboxPicker'; // Componente de mapa
 import { ecuadorLocations } from '../components/EcuadorLocations'; // Importa las ubicaciones de Ecuador
 import '../styles/Cart.css';
+import { useNotification } from '../context/NotificationContext';
 
 const MAPBOX_ACCESS_TOKEN = 'tu_token_de_acceso_mapbox_aquí'; // Reemplaza con tu token de acceso de Mapbox
 

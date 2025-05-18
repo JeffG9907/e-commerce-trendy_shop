@@ -5,35 +5,51 @@ import {
   DialogContent, DialogActions, TextField
 } from '@mui/material';
 import { NavigateNext, NavigateBefore } from '@mui/icons-material';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getFirestore, doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUtils';
 import Slider from 'react-slick';
 import '../styles/ProductDetail.css';
+import { useNavigate } from 'react-router-dom';
+import { Snackbar, Alert } from '@mui/material';
 
-function ProductDetail() {
-  const { id } = useParams();
-  const { user } = useAuth();
-  const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [openDialog, setOpenDialog] = useState(false);
-  const db = getFirestore();
+const ProductDetail = () => {
+    // All hooks must be called unconditionally at the top
+    const { user, loading } = useAuth();
+    const { id } = useParams();
+    const [product, setProduct] = useState(null);
+    const [quantity, setQuantity] = useState(1);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const db = getFirestore();
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const productDoc = await getDoc(doc(db, 'products', id));
-        if (productDoc.exists()) {
-          setProduct({ id: productDoc.id, ...productDoc.data() });
+    useEffect(() => {
+        if (!loading && user) {
+            const fetchProduct = async () => {
+                try {
+                    const productDoc = await getDoc(doc(db, 'products', id));
+                    if (productDoc.exists()) {
+                        setProduct({ id: productDoc.id, ...productDoc.data() });
+                    }
+                } catch (error) {
+                    console.error('Error fetching product:', error);
+                }
+            };
+            fetchProduct();
         }
-      } catch (error) {
-        console.error('Error fetching product:', error);
-      }
-    };
+    }, [id, db, loading, user]);
 
-    fetchProduct();
-  }, [id, db]);
+    if (loading) return <div>Loading...</div>;
+    if (!user) return <Navigate to="/login" replace />;
+    if (!product) {
+        return (
+            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+                <Typography align="center" variant="h5">Cargando...</Typography>
+            </Container>
+        );
+    }
 
   const handleAddToCart = () => {
     if (!user) {
@@ -60,7 +76,8 @@ function ProductDetail() {
       await addDoc(cartRef, cartItem);
       setOpenDialog(false);
       setQuantity(1);
-      alert("Producto agregado al carrito con éxito.");
+      setOpenSnackbar(true); // Mostrar Snackbar
+      setTimeout(() => navigate(-1), 2000); // Redirigir después de 2 segundos
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
@@ -187,8 +204,23 @@ function ProductDetail() {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Add this Snackbar component at the end of the return */}
+      <Snackbar
+          open={openSnackbar}
+          autoHideDuration={3000}
+          onClose={() => setOpenSnackbar(false)}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+          <Alert 
+              onClose={() => setOpenSnackbar(false)} 
+              severity="success"
+              sx={{ width: '100%' }}
+          >
+              ¡Producto agregado al carrito correctamente!
+          </Alert>
+      </Snackbar>
     </Container>
   );
-}
+};
 
 export default ProductDetail;

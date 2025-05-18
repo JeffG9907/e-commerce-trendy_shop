@@ -15,6 +15,11 @@ import MainLayout from './layouts/MainLayout';
 import ErrorBoundary from './components/ErrorBoundary';
 import './styles/App.css';
 import { useLocation } from 'react-router-dom';
+import { NotificationProvider } from './context/NotificationContext';
+import { auth } from './firebase/config';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import LoadingSpinner from './components/LoadingSpinner';
+import AdminRoute from './components/AdminRoute';
 import { CartProvider } from './context/CartContext';
 
 function App() {
@@ -22,33 +27,39 @@ function App() {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
-    <CartProvider>
-      <div className="App">
-        <ErrorBoundary>
-          {!isAdminRoute ? (
-            <MainLayout>
+    <NotificationProvider>
+      <CartProvider>
+        <div className="App">
+          <ErrorBoundary>
+            {!isAdminRoute ? (
+              <MainLayout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/search" element={<SearchResults />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/contact" element={<Contact />} />
+                </Routes>
+              </MainLayout>
+            ) : (
               <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/search" element={<SearchResults />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/contact" element={<Contact />} />
+                <Route path="/admin/*" element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                } />
               </Routes>
-            </MainLayout>
-          ) : (
-            <Routes>
-              <Route path="/admin/*" element={<AdminLayout />} />
-            </Routes>
-          )}
-        </ErrorBoundary>
-        {!isAdminRoute && <Footer />}
-      </div>
-    </CartProvider>
+            )}
+          </ErrorBoundary>
+          {!isAdminRoute && <Footer />}
+        </div>
+      </CartProvider>
+    </NotificationProvider>
   );
 }
 

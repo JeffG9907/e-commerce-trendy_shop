@@ -1,87 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Button, Container, Paper, Typography,
-  Box, Grid, Card, CardMedia, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField
+import { 
+  Container, Typography, Box, Button, Grid, Paper,
+  CircularProgress, IconButton
 } from '@mui/material';
-import { NavigateNext, NavigateBefore } from '@mui/icons-material';
-import { useParams, Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { getFirestore, doc, getDoc, collection, addDoc } from 'firebase/firestore';
-import { convertGoogleDriveUrl } from '../utils/googleDriveUtils';
+import { useParams, useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Slider from 'react-slick';
+import { convertGoogleDriveUrl } from '../utils/googleDriveUtils';
 import '../styles/ProductDetail.css';
-import { useNavigate } from 'react-router-dom';
-import { Snackbar, Alert } from '@mui/material';
 
-const ProductDetail = () => {
-    // All hooks must be called unconditionally at the top
-    const { user, loading } = useAuth();
-    const { id } = useParams();
-    const [product, setProduct] = useState(null);
-    const [quantity, setQuantity] = useState(1);
-    const [openDialog, setOpenDialog] = useState(false);
-    const [openSnackbar, setOpenSnackbar] = useState(false);
-    const db = getFirestore();
-    const navigate = useNavigate();
+function ProductDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (!loading && user) {
-            const fetchProduct = async () => {
-                try {
-                    const productDoc = await getDoc(doc(db, 'products', id));
-                    if (productDoc.exists()) {
-                        setProduct({ id: productDoc.id, ...productDoc.data() });
-                    }
-                } catch (error) {
-                    console.error('Error fetching product:', error);
-                }
-            };
-            fetchProduct();
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const docRef = doc(db, 'products', id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          setProduct({ id: docSnap.id, ...docSnap.data() });
         }
-    }, [id, db, loading, user]);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (loading) return <div>Loading...</div>;
-    if (!user) return <Navigate to="/login" replace />;
-    if (!product) {
-        return (
-            <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-                <Typography align="center" variant="h5">Cargando...</Typography>
-            </Container>
-        );
-    }
-
-  const handleAddToCart = () => {
-    if (!user) {
-      alert("Por favor, inicia sesión para agregar productos al carrito.");
-      return;
-    }
-    if (product.stock === 0) return;
-    setOpenDialog(true);
-  };
-
-  const handleConfirmAdd = async () => {
-    try {
-      const cartItem = {
-        userId: user.uid,
-        productId: product.id,
-        productName: product.name,
-        price: product.price,
-        quantity: quantity,
-        imageUrls: product.imageUrls,
-        addedAt: new Date().toISOString()
-      };
-
-      const cartRef = collection(db, 'carts');
-      await addDoc(cartRef, cartItem);
-      setOpenDialog(false);
-      setQuantity(1);
-      setOpenSnackbar(true); // Mostrar Snackbar
-      setTimeout(() => navigate(-1), 2000); // Redirigir después de 2 segundos
-    } catch (error) {
-      console.error('Error adding to cart:', error);
-    }
-  };
+    fetchProduct();
+  }, [id]);
 
   const sliderSettings = {
     dots: true,
@@ -89,138 +43,102 @@ const ProductDetail = () => {
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    adaptiveHeight: true,
-    arrows: true,
-    nextArrow: <NavigateNext style={{ color: 'black', fontSize: 40 }} />,
-    prevArrow: <NavigateBefore style={{ color: 'black', fontSize: 40 }} />
+    autoplay: true,
+    autoplaySpeed: 3000
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (!product) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <Typography align="center" variant="h5">Cargando...</Typography>
+      <Container>
+        <Typography variant="h5" sx={{ mt: 4, textAlign: 'center' }}>
+          Producto no encontrado
+        </Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" className="main-container">
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Grid container spacing={4} alignItems="center">
-          {/* Imagen del producto - Lado izquierdo */}
-          <Grid item xs={12} sm={5}>
-            <Box className="image-box">
-              <Card className="product-card">
-                {product.imageUrls && product.imageUrls.length > 0 ? (
-                  <Slider {...sliderSettings}>
-                    {product.imageUrls.map((url, index) => (
-                      <CardMedia
-                        key={index}
-                        component="img"
-                        image={convertGoogleDriveUrl(url)}
-                        alt={`${product.name} ${index + 1}`}
-                        className="card-image"
-                      />
-                    ))}
-                  </Slider>
-                ) : (
-                  <CardMedia
-                    component="img"
-                    image="https://via.placeholder.com/300"
-                    alt="No image available"
-                    className="card-image"
-                  />
-                )}
-              </Card>
-              {/* Mostrar estado AGOTADO o PRÓXIMAMENTE */}
-              {product.stock === 0 || product.status === "PRÓXIMAMENTE" ? (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1
-                  }}
-                >
-                  <Typography variant="h6" color="white" fontWeight="bold">
-                    {product.stock === 0 ? "AGOTADO" : "PRÓXIMAMENTE"}
-                  </Typography>
-                </Box>
-              ) : null}
-            </Box>
-          </Grid>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <IconButton 
+        onClick={() => navigate(-1)} 
+        className="back-button"
+        sx={{ mb: 2 }}
+      >
+        <ArrowBackIcon />
+      </IconButton>
 
-          {/* Descripciones del producto - Lado derecho */}
-          <Grid item xs={10} sm={7}>
-            <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={6}>
+          <Paper elevation={3} className="image-container">
+            {product.imageUrls && product.imageUrls.length > 0 ? (
+              <Slider {...sliderSettings}>
+                {product.imageUrls.map((url, index) => (
+                  <div key={index} className="slider-image-wrapper">
+                    <img
+                      src={convertGoogleDriveUrl(url)}
+                      alt={`${product.name} ${index + 1}`}
+                      className="product-detail-image"
+                    />
+                  </div>
+                ))}
+              </Slider>
+            ) : (
+              <img
+                src="/placeholder-image.jpg"
+                alt="No image available"
+                className="product-detail-image"
+              />
+            )}
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Box className="product-info">
+            <Typography variant="h4" component="h1" className="product-title">
               {product.name}
             </Typography>
-            <Typography sx={{ fontSize: '1rem', lineHeight: 1.5, mt: 2 }}>
+            
+            <Typography variant="h5" color="primary" className="product-price">
+              ${product.price?.toFixed(2)}
+            </Typography>
+
+            <Typography variant="body1" className="product-description">
               {product.description}
             </Typography>
-            <Typography sx={{ fontSize: '1.25rem', color: 'gray', mt: 1 }}>
-              ${product.price.toFixed(2)}
-            </Typography>
-            {/* Botón de agregar desactivado según condición */}
+
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle1" className="stock-status">
+                {product.stock > 0 ? (
+                  <span className="in-stock">En Stock ({product.stock} disponibles)</span>
+                ) : (
+                  <span className="out-of-stock">Agotado</span>
+                )}
+              </Typography>
+            </Box>
+
             <Button
               variant="contained"
-              color="primary"
-              onClick={handleAddToCart}
-              sx={{ mt: 3 }}
+              startIcon={<AddShoppingCartIcon />}
+              className="add-to-cart-button"
               disabled={product.stock === 0 || product.status === "PRÓXIMAMENTE"}
+              fullWidth
+              sx={{ mt: 4 }}
             >
-              {product.stock === 0 || product.status === "PRÓXIMAMENTE" ? "NO DISPONIBLE" : "AGREGAR"}
+              Agregar al Carrito
             </Button>
-          </Grid>
+          </Box>
         </Grid>
-      </Paper>
-
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>Agregar al Carrito</DialogTitle>
-        <DialogContent>
-          <Typography gutterBottom>{product?.name}</Typography>
-          <Typography gutterBottom color="primary">${product?.price.toFixed(2)}</Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Cantidad"
-            type="number"
-            fullWidth
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-            inputProps={{ min: 1, max: product?.stock }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialog(false)}>Cancelar</Button>
-          <Button onClick={handleConfirmAdd} variant="contained" color="primary">
-            Agregar
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {/* Add this Snackbar component at the end of the return */}
-      <Snackbar
-          open={openSnackbar}
-          autoHideDuration={3000}
-          onClose={() => setOpenSnackbar(false)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-      >
-          <Alert 
-              onClose={() => setOpenSnackbar(false)} 
-              severity="success"
-              sx={{ width: '100%' }}
-          >
-              ¡Producto agregado al carrito correctamente!
-          </Alert>
-      </Snackbar>
+      </Grid>
     </Container>
   );
-};
+}
 
 export default ProductDetail;

@@ -10,7 +10,6 @@ import { useAuth } from '../hooks/useAuth';
 import { getFirestore, doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUtils';
 import Slider from 'react-slick';
-import '../styles/ProductDetail.css';
 
 function ProductDetail() {
   const { id } = useParams();
@@ -80,107 +79,90 @@ function ProductDetail() {
 
   if (!product) {
     return (
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <Typography align="center" variant="h5">Cargando...</Typography>
+      <Container sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '60vh',
+        textAlign: 'center'
+      }}>
+        <Typography variant="h5">Cargando...</Typography>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="md" className="main-container">
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-        <Grid container spacing={4} alignItems="center" justifyContent="center">
-          {/* Imagen del producto - Lado izquierdo */}
-          <Grid item xs={12} sm={5}>
-            <Box
-              className="image-box"
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                position: 'relative',
-                width: '100%',
-              }}
-            >
-              <Card
-                className="product-card"
-                sx={{
-                  width: '100%',
-                  maxWidth: 300,
-                  position: 'relative',
-                  mx: 'auto',
-                  borderRadius: 2,
-                }}
-              >
+    <Container maxWidth="md" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 5 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 2, width: '100%' }}>
+        <Grid
+          container
+          spacing={4}
+          justifyContent="center"
+          alignItems="center"
+          textAlign="center"
+        >
+          {/* Imagen del producto */}
+          <Grid item xs={12}>
+            <Box sx={{ position: 'relative', mx: 'auto', maxWidth: { xs: 200, sm: 200, md: 200 } }}>
+              <Card>
+                {product.imageUrls && product.imageUrls.length > 0 ? (
+                  <Slider {...sliderSettings}>
+                    {product.imageUrls.map((url, index) => (
+                      <CardMedia
+                        key={index}
+                        component="img"
+                        image={convertGoogleDriveUrl(url)}
+                        alt={`${product.name} ${index + 1}`}
+                        sx={{
+                          width: '100%',
+                          maxWidth: 200,
+                          height: 'auto',
+                          maxHeight: 200,
+                          objectFit: 'contain'
+                        }}
+                      />
+                    ))}
+                  </Slider>
+                ) : (
+                  <CardMedia
+                    component="img"
+                    image="https://via.placeholder.com/300"
+                    alt="No image available"
+                    sx={{ width: '100%', height: 'auto', maxHeight: 400, objectFit: 'contain' }}
+                  />
+                )}
+              </Card>
+
+              {(product.stock === 0 || product.status === "PRÓXIMAMENTE") && (
                 <Box
                   sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
                     width: '100%',
-                    height: { xs: 100, sm: 200 }, // Ajuste de altura por pantalla
-                    overflow: 'hidden',
+                    height: '100%',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
                     display: 'flex',
-                    justifyContent: 'center',
                     alignItems: 'center',
-                    backgroundColor: '#f5f5f5', // Opcional: fondo neutro
+                    justifyContent: 'center',
+                    zIndex: 1,
+                    borderRadius: 2
                   }}
                 >
-                  {product.imageUrls && product.imageUrls.length > 0 ? (
-                    <Slider {...sliderSettings}>
-                      {product.imageUrls.map((url, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: '100%',
-                          }}
-                        >
-                          <CardMedia
-                            component="img"
-                            image={convertGoogleDriveUrl(url)}
-                            alt={`${product.name} ${index + 1}`}
-                            sx={{
-                              maxHeight: '100%',
-                              maxWidth: '100%',
-                              objectFit: 'contain',
-                            }}
-                          />
-                        </Box>
-                      ))}
-                    </Slider>
-                  ) : (
-                    <CardMedia
-                      component="img"
-                      image="https://via.placeholder.com/300"
-                      alt="No image available"
-                      sx={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                      }}
-                    />
-                  )}
+                  <Typography variant="h6" color="white" fontWeight="bold">
+                    {product.stock === 0 ? "AGOTADO" : "PRÓXIMAMENTE"}
+                  </Typography>
                 </Box>
-              </Card>
+              )}
             </Box>
           </Grid>
-  
-          {/* Descripción del producto - Lado derecho */}
-          <Grid
-            item
-            xs={12}
-            sm={7}
-            sx={{
-              textAlign: { xs: 'center', sm: 'left' },
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: { xs: 'center', sm: 'flex-start' },
-            }}
-          >
+
+          {/* Información del producto */}
+          <Grid item xs={12}>
             <Typography sx={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
               {product.name}
             </Typography>
-            <Typography sx={{ fontSize: '1rem', lineHeight: 1.5, mt: 2 }}>
+            <Typography sx={{ fontSize: '1rem', mt: 2 }}>
               {product.description}
             </Typography>
             <Typography sx={{ fontSize: '1.25rem', color: 'gray', mt: 1 }}>
@@ -190,24 +172,21 @@ function ProductDetail() {
               variant="contained"
               color="primary"
               onClick={handleAddToCart}
-              sx={{ mt: 3, width: { xs: '100%', sm: 'auto' } }}
-              disabled={product.stock === 0 || product.status === 'PRÓXIMAMENTE'}
+              sx={{ mt: 3 }}
+              disabled={product.stock === 0 || product.status === "PRÓXIMAMENTE"}
             >
-              {product.stock === 0 || product.status === 'PRÓXIMAMENTE'
-                ? 'NO DISPONIBLE'
-                : 'AGREGAR'}
+              {product.stock === 0 || product.status === "PRÓXIMAMENTE" ? "NO DISPONIBLE" : "AGREGAR"}
             </Button>
           </Grid>
         </Grid>
       </Paper>
-  
+
+      {/* Diálogo de confirmación */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Agregar al Carrito</DialogTitle>
         <DialogContent>
           <Typography gutterBottom>{product?.name}</Typography>
-          <Typography gutterBottom color="primary">
-            ${product?.price.toFixed(2)}
-          </Typography>
+          <Typography gutterBottom color="primary">${product?.price.toFixed(2)}</Typography>
           <TextField
             autoFocus
             margin="dense"
@@ -215,19 +194,13 @@ function ProductDetail() {
             type="number"
             fullWidth
             value={quantity}
-            onChange={(e) =>
-              setQuantity(Math.max(1, parseInt(e.target.value) || 1))
-            }
+            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
             inputProps={{ min: 1, max: product?.stock }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancelar</Button>
-          <Button
-            onClick={handleConfirmAdd}
-            variant="contained"
-            color="primary"
-          >
+          <Button onClick={handleConfirmAdd} variant="contained" color="primary">
             Agregar
           </Button>
         </DialogActions>

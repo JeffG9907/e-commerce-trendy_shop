@@ -10,15 +10,16 @@
 
 /* Contenedor para la imagen */
 .image-box {
-    position: relative;
-    max-width: 200px; /* Ancho máximo */
-    max-height: 200px; /* Alto máximo */
-    margin: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%; /* Permite que el contenedor sea flexible */
-    height: auto; /* Ajusta el alto dinámicamente */
+  position: relative;
+  width: 100%;
+  max-width: 200px;    /* ancho máximo en desktop */
+  height: 200px;       /* altura fija en desktop */
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;    /* recorta cualquier desborde */
+  background-color: #f5f5f5;
 }
 
 /* Tarjeta del producto */
@@ -54,3 +55,11 @@
     font-size: 1rem; /* Tamaño estándar */
     line-height: 1.5; /* Espaciado entre líneas */
   }
+
+/* Ajustes específicamente para pantallas pequeñas */
+@media (max-width: 600px) {
+  .image-box {
+    max-width: 150px;    /* más pequeña en móvil */
+    height: 150px;       /* altura fija en móvil */
+  }
+}

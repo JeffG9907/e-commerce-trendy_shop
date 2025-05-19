@@ -60,12 +60,22 @@ function Login() {
       <Grid container spacing={3} alignItems="center" justifyContent="center">
         <Grid item xs={12} sm={6} md={6} lg={5}>
           <Fade in timeout={1000}>
-            <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'center' }}>
+            <Box sx={{ 
+              display: { xs: 'none', sm: 'block' }, 
+              textAlign: 'center',
+              '& img': {
+                maxWidth: '100%',
+                height: 'auto',
+                maxHeight: '440px',
+                '@media (max-width: 900px)': {
+                  maxHeight: '280px',
+                }
+              }
+            }}>
               <img 
                 src={customImage} 
                 className="custom-image" 
                 alt="Custom login illustration" 
-                style={{ maxWidth: '100%', height: 'auto' }} 
               />
             </Box>
           </Fade>

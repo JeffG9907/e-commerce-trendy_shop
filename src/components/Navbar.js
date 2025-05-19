@@ -20,8 +20,10 @@ import {
   Typography,
   Card,
   CardContent,
-  CardMedia
+  CardMedia,
+  CardActions
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { Menu as MenuIcon, Search as SearchIcon, ShoppingCart as ShoppingCartIcon, AccountCircle as AccountCircleIcon, Home as HomeIcon, ListAlt as ListAltIcon } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../firebase/config';
@@ -29,6 +31,26 @@ import { signOut } from 'firebase/auth';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import logo from '../assets/SHOP.png';
 import '../styles/Navbar.css';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import Slider from 'react-slick';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { convertGoogleDriveUrl } from '../utils/googleDriveUtils';
+
+const productSliderSettings = {
+  dots: true,
+  infinite: false,
+  speed: 500,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  autoplay: true,
+  autoplaySpeed: 3000,
+  arrows: false,
+  adaptiveHeight: true,
+  lazyLoad: 'ondemand',
+  swipeToSlide: true,
+  fade: true
+};
 
 function Navbar() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,8 +66,20 @@ function Navbar() {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
     });
-    return () => unsubscribe();
-  }, []);
+
+    // Add scroll lock when search is active
+    if (isFullPageSearch) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      unsubscribe();
+      // Reset scroll when component unmounts
+      document.body.style.overflow = 'auto';
+    };
+  }, [isFullPageSearch]);
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -115,6 +149,12 @@ function Navbar() {
     setIsFullPageSearch(false);
   };
 
+  // Add after handleNavigation function and before the return statement
+  const handleAddToCart = (product) => {
+    // Implement your add to cart logic here
+    console.log('Adding to cart:', product);
+  };
+  
   return (
     <>
       <AppBar position="static">
@@ -147,6 +187,19 @@ function Navbar() {
                 startAdornment: (
                   <InputAdornment position="start">
                     <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchTerm && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setIsFullPageSearch(false);
+                      }}
+                    >
+                      <CloseIcon />
+                    </IconButton>
                   </InputAdornment>
                 ),
               }}
@@ -280,55 +333,151 @@ function Navbar() {
         <Box
           sx={{
             position: 'fixed',
-            top: 64,
+            top: '80px',  // Changed from '70px' to move it lower
             left: 0,
             right: 0,
-            bottom: 0,
-            bgcolor: 'background.paper',
-            zIndex: 1000,
-            overflow: 'auto',
-            p: 3
+            height: 'calc(100vh - 80px)',  // Adjusted to match new top value
+            bgcolor: '#ffffff',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            p: 3,
           }}
         >
-          <Container maxWidth="lg">
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Typography variant="h4" gutterBottom>
-                  Resultados de búsqueda para: "{searchTerm}"
-                </Typography>
-              </Grid>
-              {searchResults.map((product) => (
-                <Grid item xs={12} sm={6} md={4} key={product.id}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => handleProductClick(product.id)}
-                  >
-                    <CardMedia
-                      component="img"
-                      sx={{ height: 200, objectFit: 'cover' }}
-                      image={product.imageUrl}
-                      alt={product.name}
-                    />
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography gutterBottom variant="h6">
-                        {product.name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {product.description}
-                      </Typography>
-                      <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-                        ${product.price}
-                      </Typography>
+          <Container maxWidth="lg" sx={{ 
+            flex: 1,
+            overflow: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '8px'
+            },
+            '&::-webkit-scrollbar-track': {
+              background: '#f1f1f1'
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: '#888',
+              borderRadius: '4px'
+            }
+          }}>
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: 3,
+              width: '100%'
+            }}>
+              {searchResults.length === 0 ? (
+                <Box sx={{ gridColumn: 'span 4', textAlign: 'center', py: 8 }}>
+                  <SearchIcon sx={{ fontSize: 60, color: '#ccc', mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary">
+                    No se encontraron resultados
+                  </Typography>
+                </Box>
+              ) : (
+                searchResults.map((product) => (
+                  <Card className="product-card" key={product.id} sx={{ height: '350px' }}>
+                    <Box sx={{ position: 'relative', height: '200px' }}>
+                      {product.imageUrls && product.imageUrls.length > 0 ? (
+                        <Slider {...productSliderSettings}>
+                          {product.imageUrls.map((url, index) => (
+                            <CardMedia
+                              key={index}
+                              component="img"
+                              className="product-image"
+                              image={convertGoogleDriveUrl(url)}
+                              alt={`${product.name} ${index + 1}`}
+                              sx={{ 
+                                height: '100%',
+                                width: '100%',
+                                objectFit: 'contain',
+                                backgroundColor: '#f5f5f5'
+                              }}
+                              onClick={() => handleProductClick(product.id)}
+                            />
+                          ))}
+                        </Slider>
+                      ) : (
+                        <CardMedia
+                          component="img"
+                          className="product-image"
+                          image="/placeholder-image.jpg"
+                          alt="No image available"
+                          sx={{ 
+                            height: '100%',
+                            width: '100%',
+                            objectFit: 'contain',
+                            backgroundColor: '#f5f5f5'
+                          }}
+                          onClick={() => handleProductClick(product.id)}
+                        />
+                      )}
+                      {product.stock === 0 && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1
+                          }}
+                        >
+                          <Typography variant="h6" color="white" fontWeight="bold">
+                            AGOTADO
+                          </Typography>
+                        </Box>
+                      )}
+                      {product.status === "PRÓXIMAMENTE" && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1
+                          }}
+                        >
+                          <Typography variant="h6" color="white" fontWeight="bold">
+                            PRÓXIMAMENTE
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                    <CardContent className="product-content">
+                      <Typography sx={{ fontSize: '0.80rem', fontWeight: 'bold' }}>{product.name}</Typography>
+                      <Typography sx={{ fontSize: '0.75rem', lineHeight: 1, mt: 0.5 }}>{product.description}</Typography>
+                      <Typography sx={{ fontSize: '0.75rem', lineHeight: 1, mt: 0.5 }}>${product.price?.toFixed(2)}</Typography>
                     </CardContent>
+                    <CardActions className="product-actions">
+                      <Button 
+                        size="small" 
+                        className="details-button"
+                        onClick={() => handleProductClick(product.id)}
+                      >
+                        Detalles
+                      </Button>
+                      <Button
+                        size="small"
+                        className="add-cart-button"
+                        startIcon={<AddShoppingCartIcon />}
+                        onClick={() => handleAddToCart(product)}
+                        disabled={product.stock === 0 || product.status === "PRÓXIMAMENTE"}
+                      >
+                        Agregar
+                      </Button>
+                    </CardActions>
                   </Card>
-                </Grid>
-              ))}
-            </Grid>
+                ))
+              )}
+            </Box>
           </Container>
         </Box>
       )}

@@ -360,12 +360,26 @@ function Navbar() {
           }}>
             <Box sx={{ 
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 3,
+              gridTemplateColumns: {
+                xs: 'repeat(1, 1fr)', // 1 column for mobile
+                sm: 'repeat(2, 1fr)', // 2 columns for tablets
+                md: 'repeat(3, 1fr)', // 3 columns for small desktops
+                lg: 'repeat(4, 1fr)'  // 4 columns for larger screens
+              },
+              gap: { xs: 2, sm: 2, md: 3 },
               width: '100%'
             }}>
               {searchResults.length === 0 ? (
-                <Box sx={{ gridColumn: 'span 4', textAlign: 'center', py: 8 }}>
+                <Box sx={{ 
+                  gridColumn: { 
+                    xs: 'span 1',
+                    sm: 'span 2',
+                    md: 'span 3',
+                    lg: 'span 4'
+                  }, 
+                  textAlign: 'center', 
+                  py: 8 
+                }}>
                   <SearchIcon sx={{ fontSize: 60, color: '#ccc', mb: 2 }} />
                   <Typography variant="h6" color="text.secondary">
                     No se encontraron resultados

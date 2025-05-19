@@ -85,3 +85,29 @@
     height: 30px;
   }
 }
+
+@media (max-width: 600px) {
+  .product-card {
+    height: auto !important;
+    min-height: 350px;
+  }
+
+  .product-content Typography {
+    font-size: 1rem !important;
+  }
+
+  .product-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 12px;
+  }
+
+  .product-actions button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .search-input {
+    font-size: 16px !important; /* Prevents zoom on mobile */
+  }
+}

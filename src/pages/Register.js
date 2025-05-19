@@ -1,139 +1,220 @@
 import React, { useState } from 'react';
-import { 
-  Container, Grid, Button, TextField, Typography, Box, Paper, Alert 
+import {
+  Container,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  IconButton,
+  InputAdornment,
+  CircularProgress,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import '../styles/Register.css'; // Asegúrate de incluir este archivo CSS
-import customImage from '../assets/login.png';
+import {
+  Visibility,
+  VisibilityOff,
+  Email,
+  Lock,
+  Person,
+  Phone,
+} from '@mui/icons-material';
+import { auth, db } from '../firebase/config';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+import { useNavigate, Link } from 'react-router-dom';
+import '../styles/Register.css';
 
 function Register() {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
+    phone: '',
     password: '',
-    firstName: '',
-    lastName: '',
-    phoneNumber: ''
+    confirmPassword: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const auth = getAuth();
-  const db = getFirestore();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
 
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
 
       await setDoc(doc(db, 'users', userCredential.user.uid), {
+        name: formData.name,
         email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phoneNumber: formData.phoneNumber,
-        role: 'client',
-        createdAt: new Date().toISOString()
+        phone: formData.phone,
+        createdAt: new Date().toISOString(),
       });
 
       navigate('/');
     } catch (error) {
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          setError('Email ya registrado');
-          break;
-        case 'auth/invalid-email':
-          setError('Email inválido');
-          break;
-        case 'auth/weak-password':
-          setError('La contraseña debe tener al menos 6 caracteres');
-          break;
-        default:
-          setError('Ocurrió un error durante el registro');
-      }
+      setError('Error al registrar. Por favor, intente nuevamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Container className="register-container">
-      <Grid container spacing={3} alignItems="center" justifyContent="center">
-        {/* Imagen en el lado izquierdo */}
-        <Grid item xs={12} md={5}>
-          <Box className="custom-image-wrapper">
-            <img 
-              src={customImage} 
-              className="custom-image" 
-              alt="Registro ilustración personalizada" 
-            />
-          </Box>
-        </Grid>
+    <Container component="main" maxWidth="xs" className="register-container">
+      <Paper elevation={3} className="register-paper">
+        <Box className="register-content">
+          <Typography component="h1" variant="h4" className="register-title">
+            Crear Cuenta
+          </Typography>
 
-        {/* Formulario de registro */}
-        <Grid item xs={12} md={7}>
-          <Paper className="register-paper" elevation={3}>
-            <Typography variant="h5" className="register-title">
-              REGISTRARSE
+          {error && (
+            <Typography color="error" className="error-message">
+              {error}
             </Typography>
-            {error && (
-              <Alert severity="error">
-                {error}
-              </Alert>
-            )}
-            <Box 
-              component="form" 
-              onSubmit={handleSubmit} 
-              className="register-form"
+          )}
+
+          <form onSubmit={handleSubmit} className="register-form">
+            <TextField
+              required
+              fullWidth
+              name="name"
+              label="Nombre Completo"
+              value={formData.name}
+              onChange={handleChange}
+              className="register-input"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Person />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              required
+              fullWidth
+              name="email"
+              label="Email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="register-input"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Email />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              required
+              fullWidth
+              name="phone"
+              label="Teléfono"
+              value={formData.phone}
+              onChange={handleChange}
+              className="register-input"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Phone />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              required
+              fullWidth
+              name="password"
+              label="Contraseña"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.password}
+              onChange={handleChange}
+              className="register-input"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField
+              required
+              fullWidth
+              name="confirmPassword"
+              label="Confirmar Contraseña"
+              type={showPassword ? 'text' : 'password'}
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="register-input"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Lock />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              className="register-button"
+              disabled={loading}
             >
-              <TextField
-                required
-                fullWidth
-                label="Nombres"
-                autoFocus
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              />
-              <TextField
-                required
-                fullWidth
-                label="Apellidos"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              />
-              <TextField
-                required
-                fullWidth
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-              <TextField
-                required
-                fullWidth
-                label="Contraseña"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-              <TextField
-                fullWidth
-                label="Número Celular"
-                type="tel"
-                value={formData.phoneNumber}
-                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                className="register-submit"
-              >
-                Crear Cuenta
-              </Button>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                'Registrarse'
+              )}
+            </Button>
+          </form>
+
+          <Button
+            component={Link}
+            to="/login"
+            fullWidth
+            className="login-link"
+          >
+            ¿Ya tienes una cuenta? Inicia Sesión
+          </Button>
+        </Box>
+      </Paper>
     </Container>
   );
 }

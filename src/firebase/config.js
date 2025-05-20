@@ -13,4 +13,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);export const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Force HTTPS in production
+if (window.location.protocol === 'http:' && process.env.NODE_ENV === 'production') {
+  window.location.href = window.location.href.replace('http:', 'https:');
+}
+
+export { auth, db };

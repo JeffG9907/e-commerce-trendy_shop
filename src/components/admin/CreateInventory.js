@@ -1,21 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, TextField,
-  Checkbox, FormControlLabel, Button, Box
+  Box, Typography, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Paper,
+  TextField, Button, Checkbox
 } from '@mui/material';
-import { getFirestore, collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
 
-function CreateInventory({ reportData, inventoryData, setInventoryData, verifiedProducts, setVerifiedProducts }) {
-  const db = getFirestore();
-  const auth = getAuth();
+const CreateInventory = ({ products, db, onInventoryCreated }) => {
+  const [verifiedProducts, setVerifiedProducts] = useState({});
+  const [physicalCounts, setPhysicalCounts] = useState({});
+  const [differences, setDifferences] = useState({});
+  const [createdInventoryInfo, setCreatedInventoryInfo] = useState(null);
+
+  const user = getAuth().currentUser;
+
+  // Información del "inventario a crear"
+  const inventoryName = `Inventario ${new Date().toLocaleDateString()}`;
+  const inventoryDate = new Date().toLocaleString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  const userEmail = user ? user.email : '';
+
+  const getProductPrice = (product) => {
+    if (typeof product.price === 'number') return product.price;
+    if (typeof product.price === 'string' && !isNaN(product.price)) return parseFloat(product.price);
+    return 0;
+  };
 
   const handlePhysicalCountChange = (productId, value) => {
-    const numValue = parseInt(value, 10) || 0;
-    setInventoryData(prev => ({
+    const numValue = parseInt(value) || 0;
+    if (numValue < 0) return;
+
+    setPhysicalCounts(prev => ({
       ...prev,
       [productId]: numValue
+    }));
+
+    const product = products.find(p => p.id === productId);
+    const systemCount = product?.stock || 0;
+    setDifferences(prev => ({
+      ...prev,
+      [productId]: numValue - systemCount
     }));
   };
 
@@ -26,142 +56,155 @@ function CreateInventory({ reportData, inventoryData, setInventoryData, verified
     }));
   };
 
-  const calculateDifference = (systemStock, physicalStock) => {
-    return (physicalStock || 0) - (systemStock || 0);
-  };
-
-  const calculatePriceDifference = (difference, price) => {
-    return (difference * (price || 0)).toFixed(2);
-  };
-
-  const handleSaveInventory = async () => {
+  const saveInventory = async () => {
     try {
-      const currentUser = auth.currentUser;
-      const inventoryId = doc(collection(db, 'inventory-records')).id; // Genera un ID único para el inventario
+      const hasVerifiedProducts = Object.values(verifiedProducts).some(value => value);
+      if (!hasVerifiedProducts) {
+        alert('Debe verificar al menos un producto');
+        return;
+      }
 
-      // Datos del inventario principal
-      const inventoryDocData = {
-        id: inventoryId,
+      const verifiedProductsCount = Object.values(verifiedProducts).filter(v => v).length;
+      const totalDifference = Object.values(differences).reduce((sum, diff) => sum + diff, 0);
+      const totalPriceDifference = products.reduce((sum, product) => {
+        const diff = differences[product.id] || 0;
+        const price = getProductPrice(product);
+        return sum + diff * price;
+      }, 0);
+
+      const inventoryRef = collection(db, 'inventory-records');
+      const inventoryDoc = await addDoc(inventoryRef, {
         createdAt: serverTimestamp(),
         status: 'active',
-        name: `Inventario ${new Date().toLocaleDateString()}`,
-        userId: currentUser?.uid || 'unknown',
-        userEmail: currentUser?.email || 'unknown',
-        productsCount: Object.keys(verifiedProducts).filter(key => verifiedProducts[key]).length,
-        totalDifference: reportData.reduce((acc, product) => {
-          if (verifiedProducts[product.id]) {
-            const difference = calculateDifference(product.stock, inventoryData[product.id]);
-            return acc + difference;
-          }
-          return acc;
-        }, 0),
-        totalPriceDifference: reportData.reduce((acc, product) => {
-          if (verifiedProducts[product.id]) {
-            const difference = calculateDifference(product.stock, inventoryData[product.id]);
-            const priceDifference = parseFloat(calculatePriceDifference(difference, product.price));
-            return acc + priceDifference;
-          }
-          return acc;
-        }, 0)
-      };
+        name: inventoryName,
+        totalProducts: verifiedProductsCount,
+        totalDifference,
+        totalPriceDifference,
+        verifiedProducts: verifiedProductsCount,
+        userId: user ? user.uid : null,
+        userEmail: userEmail,
+      });
 
-      // Guarda el inventario principal
-      await setDoc(doc(db, 'inventory-records', inventoryId), inventoryDocData);
+      const productsRef = collection(db, `inventory-records/${inventoryDoc.id}/products`);
 
-      // Guarda los detalles de cada producto en una subcolección
-      const productsRef = collection(db, `inventory-records/${inventoryId}/products`);
-      const savePromises = reportData.map(async (product) => {
+      for (const product of products) {
         if (verifiedProducts[product.id]) {
-          const difference = calculateDifference(product.stock, inventoryData[product.id]);
-          const priceDifference = calculatePriceDifference(difference, product.price);
-
-          const productData = {
-            inventoryId: inventoryId,
+          await setDoc(doc(productsRef, product.id), {
             productId: product.id,
             name: product.name,
             currentStock: product.stock,
-            adjustedStock: inventoryData[product.id] || 0,
-            difference: difference,
-            priceDifference: parseFloat(priceDifference),
-            price: product.price,
-            verified: true,
+            adjustedStock: physicalCounts[product.id] ?? product.stock,
+            difference: differences[product.id] ?? 0,
+            price: getProductPrice(product),
+            priceDifference: (differences[product.id] ?? 0) * getProductPrice(product),
             updatedAt: serverTimestamp()
-          };
-
-          await setDoc(doc(productsRef, product.id), productData);
+          });
         }
+      }
+
+      // Muestra los detalles del inventario recién creado
+      setCreatedInventoryInfo({
+        id: inventoryDoc.id,
+        name: inventoryName,
+        userEmail: userEmail,
       });
 
-      await Promise.all(savePromises);
-
-      // Confirmación y limpieza
       alert('Inventario guardado exitosamente');
-      setInventoryData({});
-      setVerifiedProducts({});
+      onInventoryCreated && onInventoryCreated();
     } catch (error) {
-      console.error('Error al guardar el inventario:', error);
-      alert('Error al guardar el inventario. Verifique la consola para más detalles.');
+      console.error('Error saving inventory:', error);
+      alert('Error al guardar el inventario');
     }
   };
 
   return (
-    <>
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Typography variant="h6">Crear Nuevo Inventario</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={saveInventory}
+          disabled={!Object.values(verifiedProducts).some(v => v)}
+        >
+          Guardar Inventario
+        </Button>
+      </Box>
+
+      {/* Detalles del inventario a crear */}
+      <Box sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: 2, backgroundColor: '#f9f9f9' }}>
+        <Typography variant="h6" gutterBottom><strong>DETALLES DE INVENTARIO</strong></Typography>
+        <Typography variant="body1"><strong>Nombre:</strong> {inventoryName}</Typography>
+        <Typography variant="body1"><strong>Fecha:</strong> {inventoryDate}</Typography>
+        <Typography variant="body1"><strong>Usuario:</strong> {userEmail}</Typography>
+      </Box>
+
+      {/* Detalles del inventario recién creado */}
+      {createdInventoryInfo && (
+        <Box sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: 2, backgroundColor: '#e0f7fa' }}>
+          <Typography variant="body1"><strong>ID:</strong> {createdInventoryInfo.id}</Typography>
+          <Typography variant="body1"><strong>Nombre:</strong> {createdInventoryInfo.name}</Typography>
+          <Typography variant="body1"><strong>Usuario:</strong> {createdInventoryInfo.userEmail}</Typography>
+        </Box>
+      )}
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Código</TableCell>
-              <TableCell>Producto</TableCell>
+              <TableCell>Nombre</TableCell>
               <TableCell align="right">Stock Sistema</TableCell>
               <TableCell align="right">Stock Físico</TableCell>
               <TableCell align="right">Diferencia</TableCell>
               <TableCell align="right">Diferencia ($)</TableCell>
-              <TableCell align="center">Verificado</TableCell>
+              <TableCell>Verificar</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {reportData.map((product) => {
-              const difference = calculateDifference(product.stock, inventoryData[product.id]);
-              const priceDifference = calculatePriceDifference(difference, product.price);
-              
+            {products.map((product) => {
+              const physicalCount = physicalCounts[product.id] ?? '';
+              const systemCount = product?.stock ?? 0;
+              const difference = physicalCount === '' ? 0 : (parseInt(physicalCount) - systemCount);
+              const productPrice = getProductPrice(product);
+              const priceDifference = difference * productPrice;
+
               return (
                 <TableRow key={product.id}>
                   <TableCell>{product.id}</TableCell>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell align="right">{product.stock || 0}</TableCell>
+                  <TableCell align="right">{systemCount}</TableCell>
                   <TableCell align="right">
                     <TextField
                       type="number"
-                      size="small"
-                      value={inventoryData[product.id] || ''}
+                      value={physicalCount}
                       onChange={(e) => handlePhysicalCountChange(product.id, e.target.value)}
+                      size="small"
                     />
                   </TableCell>
-                  <TableCell 
+                  <TableCell
                     align="right"
-                    style={{ 
-                      color: difference !== 0 ? (difference > 0 ? 'green' : 'red') : 'inherit'
+                    sx={{
+                      color: difference < 0 ? 'error.main' :
+                        difference > 0 ? 'success.main' : 'inherit'
                     }}
                   >
-                    {difference}
+                    {physicalCount === '' ? '' : difference}
                   </TableCell>
-                  <TableCell 
+                  <TableCell
                     align="right"
-                    style={{ 
-                      color: priceDifference !== '0.00' ? (parseFloat(priceDifference) > 0 ? 'green' : 'red') : 'inherit'
+                    sx={{
+                      color: priceDifference < 0 ? 'error.main' :
+                        priceDifference > 0 ? 'success.main' : 'inherit',
+                      fontWeight: 'bold'
                     }}
                   >
-                    ${priceDifference}
+                    {physicalCount === '' ? '' : `$${priceDifference.toFixed(2)}`}
                   </TableCell>
-                  <TableCell align="center">
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={verifiedProducts[product.id] || false}
-                          onChange={(e) => handleVerifyProduct(product.id, e.target.checked)}
-                        />
-                      }
-                      label=""
+                  <TableCell>
+                    <Checkbox
+                      checked={verifiedProducts[product.id] || false}
+                      onChange={(e) => handleVerifyProduct(product.id, e.target.checked)}
                     />
                   </TableCell>
                 </TableRow>
@@ -170,18 +213,8 @@ function CreateInventory({ reportData, inventoryData, setInventoryData, verified
           </TableBody>
         </Table>
       </TableContainer>
-      <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSaveInventory}
-          disabled={Object.keys(verifiedProducts).length === 0}
-        >
-          Guardar Inventario
-        </Button>
-      </Box>
-    </>
+    </Box>
   );
-}
+};
 
 export default CreateInventory;

@@ -1,5 +1,7 @@
-User-agent: *
+# https://www.robotstxt.org/robotstxt.html
 Allow: /
+User-agent: *
+
 Allow: /favicon.ico
 
 Sitemap: https://trendyshopec.shop/sitemap.xml

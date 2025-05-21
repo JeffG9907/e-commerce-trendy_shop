@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
-  Grid,
   Button,
   Box,
   Select,
@@ -24,8 +23,6 @@ import {
   query,
   where,
   orderBy,
-  doc,
-  getDoc,
 } from 'firebase/firestore';
 import { generatePdfReport } from '../../components/PdfReportTemplate';
 import CreateInventory from '../../components/admin/CreateInventory';
@@ -40,29 +37,29 @@ function AdminReports() {
   const [savedInventories, setSavedInventories] = useState([]);
   const [inventoryData, setInventoryData] = useState({});
   const [verifiedProducts, setVerifiedProducts] = useState({});
+  // Add this state to track selected inventory
   const [selectedInventoryId, setSelectedInventoryId] = useState(null);
   const [salesComponent, setSalesComponent] = useState(null);
+  const [inventoryProducts, setInventoryProducts] = useState([]); // Productos para inventario
   const db = getFirestore();
 
   // Report type selection UI
-  const renderReportTypeSelection = () => {
-    return (
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel id="report-type-label">Tipo de Reporte</InputLabel>
-        <Select
-          labelId="report-type-label"
-          value={reportType}
-          label="Tipo de Reporte"
-          onChange={(e) => setReportType(e.target.value)}
-        >
-          <MenuItem value="products">Productos</MenuItem>
-          <MenuItem value="categories">Categorías</MenuItem>
-          <MenuItem value="inventory">Inventario</MenuItem>
-          <MenuItem value="sales">Ventas</MenuItem>
-        </Select>
-      </FormControl>
-    );
-  };
+  const renderReportTypeSelection = () => (
+    <FormControl fullWidth sx={{ mb: 3 }}>
+      <InputLabel id="report-type-label">Tipo de Reporte</InputLabel>
+      <Select
+        labelId="report-type-label"
+        value={reportType}
+        label="Tipo de Reporte"
+        onChange={(e) => setReportType(e.target.value)}
+      >
+        <MenuItem value="products">Productos</MenuItem>
+        <MenuItem value="categories">Categorías</MenuItem>
+        <MenuItem value="inventory">Inventario</MenuItem>
+        <MenuItem value="sales">Ventas</MenuItem>
+      </Select>
+    </FormControl>
+  );
 
   useEffect(() => {
     if (reportType === 'sales') {
@@ -71,19 +68,26 @@ function AdminReports() {
     } else {
       fetchReportData();
     }
+    // eslint-disable-next-line
   }, [reportType]);
 
   useEffect(() => {
     if (inventoryMode === 'view') {
       handleOpenInventoryList();
     }
+    // Limpia los productos de inventario al cambiar de modo
+    if (inventoryMode !== 'create') {
+      setInventoryProducts([]);
+    }
+    // eslint-disable-next-line
   }, [inventoryMode]);
 
+  // Cargar datos para productos/categorías (no inventario)
   const fetchReportData = async () => {
     try {
       let data = [];
       switch (reportType) {
-        case 'products':
+        case 'products': {
           const productsRef = collection(db, 'products');
           const productsSnapshot = await getDocs(productsRef);
           data = productsSnapshot.docs.map((doc) => ({
@@ -94,12 +98,11 @@ function AdminReports() {
             price: doc.data().price || 0,
           }));
           break;
-
-        case 'categories':
+        }
+        case 'categories': {
           const categoriesRef = collection(db, 'categories');
           const categoriesSnapshot = await getDocs(categoriesRef);
 
-          // Map through categories and count products for each category
           data = await Promise.all(
             categoriesSnapshot.docs.map(async (doc) => {
               const categoryId = doc.id;
@@ -112,31 +115,40 @@ function AdminReports() {
               return {
                 id: categoryId,
                 name: doc.data().name,
-                productCount: productsSnapshot.size, // Count of products in this category
+                productCount: productsSnapshot.size,
               };
             })
           );
           break;
-
-        case 'inventory':
-          const inventoryRef = collection(db, 'products');
-          const inventorySnapshot = await getDocs(inventoryRef);
-          data = inventorySnapshot.docs.map((doc) => ({
-            id: doc.id,
-            name: doc.data().name,
-            stock: doc.data().stock || 0
-          }));
-          break;
-
+        }
+        // case 'inventory': // ¡Ya no se carga automáticamente!
+        //   break;
         default:
-          console.error('Tipo de reporte no soportado:', reportType);
+          // No hace nada
           return;
       }
 
       setReportData(data);
-      console.log('Report data updated:', data); // Add logging for debugging
+      // console.log('Report data updated:', data);
     } catch (error) {
       console.error('Error al cargar los datos del reporte:', error);
+    }
+  };
+
+  // Carga productos SOLO al presionar "Crear Inventario"
+  const loadInventoryProducts = async () => {
+    try {
+      const productsRef = collection(db, 'products');
+      const productsSnapshot = await getDocs(productsRef);
+      const products = productsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name,
+        stock: doc.data().stock || 0,
+        price: doc.data().price || 0,
+      }));
+      setInventoryProducts(products);
+    } catch (error) {
+      console.error('Error al cargar productos para inventario:', error);
     }
   };
 
@@ -146,8 +158,6 @@ function AdminReports() {
         return ['Código', 'Nombre', 'Descripción', 'Stock', 'Precio'];
       case 'categories':
         return ['Nombre', 'Cant. de Productos'];
-      case 'inventory':
-        return ['Código', 'Nombre', 'Stock Sistema', 'Stock Físico', 'Diferencia'];
       default:
         return [];
     }
@@ -170,16 +180,6 @@ function AdminReports() {
           <TableRow key={item.id}>
             <TableCell>{item.name}</TableCell>
             <TableCell>{item.productCount}</TableCell>
-          </TableRow>
-        );
-      case 'inventory':
-        return (
-          <TableRow key={item.id}>
-            <TableCell>{item.id}</TableCell>
-            <TableCell>{item.name}</TableCell>
-            <TableCell>{item.stock}</TableCell>
-            <TableCell>{inventoryData[item.id] || 0}</TableCell>
-            <TableCell>{(inventoryData[item.id] || 0) - item.stock}</TableCell>
           </TableRow>
         );
       default:
@@ -291,17 +291,6 @@ function AdminReports() {
         ]);
         break;
 
-      case 'inventory':
-        columns = ['Código', 'Nombre', 'Stock Sistema', 'Stock Físico', 'Diferencia'];
-        formattedData = reportData.map((item) => [
-          item.id,
-          item.name,
-          item.stock,
-          inventoryData[item.id] || 0,
-          (inventoryData[item.id] || 0) - item.stock,
-        ]);
-        break;
-
       default:
         alert('Tipo de reporte no soportado');
         return;
@@ -311,95 +300,72 @@ function AdminReports() {
     generatePdfReport(reportTitle, formattedData, columns);
   };
 
-  const renderInventoryContent = () => {
-    if (reportType !== 'inventory') return null;
-
-    if (selectedInventoryId) {
-      return (
-        <ViewInventoryDetails
-          inventoryId={selectedInventoryId}
-          onBack={handleCloseInventoryDetails}
-        />
-      );
-    }
-
-    return (
-      <>
-        <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-          <Button
-            variant={inventoryMode === 'create' ? 'contained' : 'outlined'}
-            onClick={() => setInventoryMode('create')}
-          >
-            Crear Inventario
-          </Button>
-          <Button
-            variant={inventoryMode === 'view' ? 'contained' : 'outlined'}
-            onClick={() => setInventoryMode('view')}
-          >
-            Ver Inventarios
-          </Button>
-        </Box>
-
-        {inventoryMode === 'create' ? (
-          <CreateInventory
-            reportData={reportData}
-            inventoryData={inventoryData}
-            setInventoryData={setInventoryData}
-            verifiedProducts={verifiedProducts}
-            setVerifiedProducts={setVerifiedProducts}
-          />
-        ) : (
-          <ViewInventories
-            savedInventories={savedInventories}
-            onSelectInventory={handleSelectInventory}
-          />
-        )}
-      </>
-    );
-  };
-
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              Reportes
-            </Typography>
-            <Button variant="contained" color="primary" onClick={generateReport}>
-              Generar PDF
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+        <Typography variant="h4">
+          Reportes
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={generateReport}
+        >
+          Generar PDF
+        </Button>
+      </Box>
+
+      {renderReportTypeSelection()}
+
+      {reportType === 'inventory' ? (
+        <>
+          <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+            <Button
+              variant={inventoryMode === 'create' ? 'contained' : 'outlined'}
+              onClick={() => {
+                setInventoryMode('create');
+                loadInventoryProducts(); // Carga productos SOLO aquí
+              }}
+            >
+              Crear Inventario
+            </Button>
+            <Button
+              variant={inventoryMode === 'view' ? 'contained' : 'outlined'}
+              onClick={() => setInventoryMode('view')}
+            >
+              Ver Inventarios
             </Button>
           </Box>
 
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>Tipo de Reporte</InputLabel>
-            <Select
-              value={reportType}
-              label="Tipo de Reporte"
-              onChange={(e) => setReportType(e.target.value)}
-            >
-              <MenuItem value="products">Productos</MenuItem>
-              <MenuItem value="categories">Categorías</MenuItem>
-              <MenuItem value="inventory">Inventario</MenuItem>
-              <MenuItem value="sales">Ventas</MenuItem>
-            </Select>
-          </FormControl>
-
-          {/* Renderiza la tabla para Productos y Categorías */}
-          {(reportType === 'products' || reportType === 'categories') && renderReportTable()}
-
-          {/* Renderiza el contenido específico para Inventario */}
-          {reportType === 'inventory' && (
+          {inventoryMode === 'create' ? (
+            <CreateInventory
+              products={inventoryProducts}
+              db={db}
+              onInventoryCreated={() => {
+                setInventoryMode('view');
+                handleOpenInventoryList();
+              }}
+            />
+          ) : (
             <ViewInventories
               savedInventories={savedInventories}
               onSelectInventory={handleSelectInventory}
             />
           )}
 
-          {/* Renderiza filtros para Ventas */}
-          {reportType === 'sales' && salesComponent?.filters}
-        </Grid>
-      </Grid>
+          {selectedInventoryId && (
+            <ViewInventoryDetails
+              inventoryId={selectedInventoryId}
+              onBack={handleCloseInventoryDetails}
+              open={!!selectedInventoryId}
+            />
+          )}
+        </>
+      ) : reportType === 'sales' ? (
+        salesComponent?.filters
+      ) : (
+        renderReportTable()
+      )}
     </Container>
   );
 }

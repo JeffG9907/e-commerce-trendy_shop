@@ -180,13 +180,13 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
           <Alert severity={message.type} sx={{ mb: 2 }}>{message.text}</Alert>
         )}
         <Typography component="h1" variant="h5" align="center" gutterBottom>
-          MI CUENTA
+          <strong>MI CUENTA</strong>
         </Typography>
         <Box className="profile-form">
           <Grid container spacing={2}>
             {isEditing ? (
               <>
-                <Grid item xs={12} sm={6} sx={{ width: '40%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '40%' } }}>
                     <TextField
                     fullWidth
                     label="Nombres"
@@ -194,7 +194,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     onChange={(e) => setUserData({ ...userData, firstName: e.target.value })}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} sx={{ width: '40%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '40%' } }}>
                     <TextField
                     fullWidth
                     label="Apellidos"
@@ -202,7 +202,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     onChange={(e) => setUserData({ ...userData, lastName: e.target.value })}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '15%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '16%' } }}>
                     <TextField
                     fullWidth
                     label="Cédula"
@@ -210,7 +210,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     onChange={(e) => setUserData({ ...userData, cedula: e.target.value })}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '35%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '33%' } }}>
                   <Autocomplete
                     options={ecuadorLocations.map((p) => p.province)}
                     value={userData.province || null}
@@ -220,7 +220,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     )}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '30%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '30%' } }}>
                   <Autocomplete
                     options={availableCantons}
                     value={userData.canton || null}
@@ -231,7 +231,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     )}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '30%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '33%' } }}>
                   <Autocomplete
                     options={availableParroquias}
                     value={userData.parroquia || null}
@@ -242,7 +242,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     )}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '100%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '100%' } }}>
                   <Typography variant="h6">Selecciona tu ubicación:</Typography>
                   <div style={{ width: '100%' }}>
                     <MapboxPicker
@@ -253,25 +253,28 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     />
                   </div>
                 </Grid>
-                <Grid item xs={12} sx={{ width: '100%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '100%' } }}>
                   <TextField
                     fullWidth
+                    multiline
+                    rows={3}
                     label="Dirección Exacta"
                     className="direccion-field"
                     value={userData.address || ''}
                     onChange={(e) => setUserData({ ...userData, address: e.target.value })}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '40%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '15%' } }}>
                   <TextField
                     fullWidth
+                    multiline
                     label="Código Postal"
                     className="form-field"
                     value={userData.postalCode || ''}
                     onChange={(e) => setUserData({ ...userData, postalCode: e.target.value })}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '40%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '15%' } }}>
                   <TextField
                     fullWidth
                     label="Número de Celular"
@@ -280,7 +283,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
                     onChange={(e) => setUserData({ ...userData, phoneNumber: e.target.value })}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '100%' }}>
+                <Grid item xs={12} sx={{ width: '66.75%' }}>
                   <TextField
                     fullWidth
                     label="Email"
@@ -312,7 +315,7 @@ const handleLocationChange = ({ longitude, latitude, address }) => {
               </>
             ) : (
               <>
-                <Grid item xs={12} className="profile-info">
+                <Grid item xs={12} className="profile-info" sx={{ textAlign: 'left' }}>
                   <Typography variant="body1"><strong>Nombres:</strong> {userData.firstName}</Typography>
                   <Typography variant="body1"><strong>Apellidos:</strong> {userData.lastName}</Typography>
                   <Typography variant="body1"><strong>Email:</strong> {userData.email}</Typography>

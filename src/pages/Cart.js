@@ -13,7 +13,6 @@ import { convertGoogleDriveUrl } from '../utils/googleDriveUtils'; // Importa la
 import MapboxPicker from '../components/MapboxPicker'; // Componente de mapa
 import { ecuadorLocations } from '../components/EcuadorLocations'; // Importa las ubicaciones de Ecuador
 import '../styles/Cart.css';
-import { useNotification } from '../context/NotificationContext';
 
 const MAPBOX_ACCESS_TOKEN = 'tu_token_de_acceso_mapbox_aquí'; // Reemplaza con tu token de acceso de Mapbox
 
@@ -234,7 +233,9 @@ const Cart = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    // Cambios principales marcados con comentarios
+
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       <Typography variant="h4" gutterBottom>
         Mi Carrito
       </Typography>
@@ -247,44 +248,36 @@ const Cart = () => {
 
       {cartItems.length === 0 ? (
         <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            No tienes productos en tu carrito
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            onClick={() => navigate('/')} // Redirige a la página de productos
-            sx={{ mt: 2 }}
-          >
-            AGREGAR PRODUCTOS AL CARRITO
-          </Button>
+          {/* ... */}
         </Box>
       ) : (
         <>
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             {cartItems.map((item) => (
-              <Grid item xs={12} md={8} key={item.id}>
-                <Card className="cart-item" sx={{ display: 'flex', flexDirection: 'row' }}>
+              <Grid item xs={12} md={8} key={item.id} sx={{ mx: 'auto' }}>
+                <Card 
+                  className="cart-item" 
+                  sx={{ 
+                    display: 'flex', 
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'center', sm: 'flex-start' },
+                  }}
+                >
                   <CardMedia
                     component="img"
-                    sx={{ width: 200, height: 200, objectFit: 'contain', backgroundColor: '#f5f5f5' }}
+                    sx={{
+                      width: { xs: '100%', sm: 200 },
+                      height: { xs: 180, sm: 200 },
+                      objectFit: 'contain',
+                      backgroundColor: '#f5f5f5'
+                    }}
                     image={convertGoogleDriveUrl(item.imageUrls?.[0] || '/placeholder-image.jpg')}
                     alt={item.productName || 'Producto'}
                   />
-                  <CardContent sx={{ flex: 1 }}>
-                    <Typography variant="h6">{item.productName}</Typography>
-                    <Typography variant="body1" color="text.secondary">
-                      Precio: ${item.price.toFixed(2)}
-                    </Typography>
-                    <Typography variant="body1">
-                      Cantidad: {item.quantity}
-                    </Typography>
-                    <Typography variant="body1" color="primary">
-                      Subtotal: ${(item.price * item.quantity).toFixed(2)}
-                    </Typography>
+                  <CardContent sx={{ flex: 1, width: '100%' }}>
+                    {/* ... */}
                   </CardContent>
-                  <Box sx={{ p: 2 }}>
+                  <Box sx={{ p: 2, alignSelf: { xs: 'center', sm: 'flex-start' } }}>
                     <IconButton 
                       onClick={() => handleRemoveItem(item.id)}
                       color="error"
@@ -297,7 +290,7 @@ const Cart = () => {
             ))}
           </Grid>
 
-          <Box sx={{ mt: 4, textAlign: 'right' }}>
+          <Box sx={{ mt: 4, textAlign: { xs: 'center', sm: 'right' } }}>
             <Typography variant="h5" gutterBottom>
               Total: ${total.toFixed(2)}
             </Typography>
@@ -306,6 +299,7 @@ const Cart = () => {
               color="primary"
               size="large"
               onClick={handleCheckout}
+              sx={{ width: { xs: '100%', sm: 'auto' } }}
             >
               Procesar Órden
             </Button>
@@ -317,22 +311,26 @@ const Cart = () => {
       <Dialog 
         open={showAddressDialog} 
         onClose={() => setShowAddressDialog(false)}
-        maxWidth="md" // Establece el ancho máximo del diálogo
-        fullWidth // Asegura que el diálogo use todo el ancho disponible
+        maxWidth="sm"
+        fullWidth
       >
         <DialogTitle>Seleccionar Dirección de Envío</DialogTitle>
-        <DialogContent sx={{ minWidth: '600px' }}> {/* Ajusta el ancho mínimo */}
-          <Typography variant="h6">¿Desea usar la dirección guardada en su perfil o ingresar una nueva?</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2, gap: 2 }}>
+        <DialogContent>
+          <Typography variant="h6">
+            ¿Desea usar la dirección guardada en su perfil o ingresar una nueva?
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, mt: 2, gap: 2 }}>
             <Button
               variant={useDefaultAddress ? 'contained' : 'outlined'}
               onClick={() => setUseDefaultAddress(true)}
+              fullWidth
             >
               Usar Dirección Guardada
             </Button>
             <Button
               variant={!useDefaultAddress ? 'contained' : 'outlined'}
               onClick={() => setUseDefaultAddress(false)}
+              fullWidth
             >
               Ingresar Nueva Dirección
             </Button>
@@ -340,44 +338,44 @@ const Cart = () => {
           {!useDefaultAddress && (
             <Box sx={{ mt: 3 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sx={{ width: '35%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '48%' } }}>
                   <Autocomplete
                     options={ecuadorLocations.map((p) => p.province)}
                     value={userData.province || null}
                     onChange={handleProvinceChange}
-                    renderInput={(params) => <TextField {...params} label="Provincia" />}
+                    renderInput={(params) => <TextField {...params} label="Provincia" fullWidth />}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '30%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '48%' } }}>
                   <Autocomplete
                     options={availableCantons}
                     value={userData.canton || null}
                     onChange={handleCantonChange}
                     disabled={!userData.province}
-                    renderInput={(params) => <TextField {...params} label="Cantón" />}
+                    renderInput={(params) => <TextField {...params} label="Cantón" fullWidth />}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '30%' }}>
+                <Grid item xs={12} sx={{ width: '100%' }}>
                   <Autocomplete
                     options={availableParroquias}
                     value={userData.parroquia || null}
                     onChange={handleParroquiaChange}
                     disabled={!userData.canton}
-                    renderInput={(params) => <TextField {...params} label="Parroquia" />}
+                    renderInput={(params) => <TextField {...params} label="Parroquia" fullWidth />}
                   />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '100%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '100%' } }}>
                   <Typography variant="h6">Selecciona tu ubicación:</Typography>
                   <MapboxPicker
-                      longitude={mapCoordinates.longitude}
-                      latitude={mapCoordinates.latitude}
-                      zoom={zoom}
-                      onLocationChange={handleLocationChange}
-                    />
+                    longitude={mapCoordinates.longitude}
+                    latitude={mapCoordinates.latitude}
+                    zoom={zoom}
+                    onLocationChange={handleLocationChange}
+                  />
                 </Grid>
-                <Grid item xs={12} sx={{ width: '65%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '72%' } }}>
                   <TextField
-                    key={userData.address || 'unique-key'} // Asegúrate de que React detecte el cambio
+                    key={userData.address || 'unique-key'}
                     fullWidth
                     multiline
                     rows={3}
@@ -388,7 +386,7 @@ const Cart = () => {
                     }
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} sx={{ width: '30%' }}>
+                <Grid item xs={12} sm={6} sx={{ width: { xs: '100%', sm: '25%' } }}>
                   <TextField
                     fullWidth
                     label="Código Postal"

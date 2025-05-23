@@ -5,7 +5,7 @@ import {
   DialogContent, DialogActions, TextField
 } from '@mui/material';
 import { NavigateNext, NavigateBefore } from '@mui/icons-material';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getFirestore, doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { convertGoogleDriveUrl } from '../utils/googleDriveUtils';
@@ -17,7 +17,9 @@ function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openLoginDialog, setOpenLoginDialog] = useState(false);
   const db = getFirestore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -36,7 +38,7 @@ function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!user) {
-      alert("Por favor, inicia sesión para agregar productos al carrito.");
+      setOpenLoginDialog(true);
       return;
     }
     if (product.stock === 0) return;
@@ -63,6 +65,11 @@ function ProductDetail() {
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
+  };
+
+  const handleLoginRedirect = () => {
+    setOpenLoginDialog(false);
+    navigate("/login");
   };
 
   const sliderSettings = {
@@ -180,6 +187,22 @@ function ProductDetail() {
           </Grid>
         </Grid>
       </Paper>
+
+      {/* Diálogo para login */}
+      <Dialog open={openLoginDialog} onClose={() => setOpenLoginDialog(false)}>
+        <DialogTitle>Necesitas iniciar sesión</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Por favor, inicia sesión para agregar productos al carrito.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenLoginDialog(false)}>Cancelar</Button>
+          <Button onClick={handleLoginRedirect} variant="contained" color="primary">
+            Iniciar sesión
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Diálogo de confirmación */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>

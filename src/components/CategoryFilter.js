@@ -61,6 +61,7 @@ const Products = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [openDialog, setOpenDialog] = useState(false);
+  const [openLoginDialog, setOpenLoginDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -121,7 +122,12 @@ const Products = () => {
       console.error('No product provided');
       return;
     }
-    
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      setOpenLoginDialog(true);
+      return;
+    }
     setSelectedProduct(product);
     setQuantity(1);
     setOpenDialog(true);
@@ -133,7 +139,7 @@ const Products = () => {
       const user = auth.currentUser;
 
       if (!user) {
-        navigate('/login');
+        setOpenLoginDialog(true);
         return;
       }
 
@@ -203,6 +209,11 @@ const Products = () => {
 
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
+  };
+
+  const handleLoginRedirect = () => {
+    setOpenLoginDialog(false);
+    navigate('/login');
   };
 
   const productSliderSettings = {
@@ -367,6 +378,22 @@ const Products = () => {
         ))}
       </Box>
 
+      {/* Dialogo para login */}
+      <Dialog open={openLoginDialog} onClose={() => setOpenLoginDialog(false)}>
+        <DialogTitle>Necesitas iniciar sesión</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Por favor, inicia sesión para agregar productos al carrito.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenLoginDialog(false)}>Cancelar</Button>
+          <Button onClick={handleLoginRedirect} variant="contained" color="primary">
+            Iniciar sesión
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Agregar al Carrito</DialogTitle>
         <DialogContent>
@@ -374,7 +401,7 @@ const Products = () => {
             {selectedProduct?.name}
           </Typography>
           <Typography gutterBottom color="primary">
-            ${selectedProduct?.price.toFixed(2)}
+            ${selectedProduct?.price?.toFixed(2)}
           </Typography>
           <TextField
             autoFocus

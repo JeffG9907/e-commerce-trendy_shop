@@ -4,13 +4,11 @@
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
-
-
-<url>
-  <loc>https://trendyshopec.shop/</loc>
-  <lastmod>2025-05-18T17:45:13+00:00</lastmod>
-</url>
-
-
+  <url>
+    <loc>https://trendyshopec.shop/</loc>
+    <lastmod>2025-05-23T01:35:17+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!-- Puedes añadir más URLs siguiendo el mismo formato -->
 </urlset>

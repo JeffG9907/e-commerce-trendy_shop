@@ -1,28 +1,89 @@
 .banner-container {
   position: relative;
   width: 95%;
-  height: 450px;
-  margin: 1.5rem auto;  /* Changed: added vertical and horizontal auto margin */
+  margin: 1.5rem auto;
   overflow: hidden;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  /* Remove fixed height here for responsiveness */
 }
 
 .banner-image {
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 2.3 / 1; /* Controla la relación de aspecto, ajusta según la imagen */
+  max-height: 420px;
+  min-height: 140px;
   object-fit: cover;
+  object-position: center 10%;
   filter: brightness(0.8);
+  display: block;
+  transition: max-height 0.3s, min-height 0.3s;
 }
 
 .slogan {
   position: absolute;
-  top: 50%;
+  top: 85%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
   text-align: center;
-  font-weight: bold !important;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  font-family: 'Playfair Display', serif !important;
+  z-index: 2;
+  user-select: none;
+  font-family: 'Ethnocentric', Arial, sans-serif;
+  font-size: clamp(1.2rem, 7vw, 2.6rem);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.slogan-main {
+  color: #fff;
+  font-size: clamp(2.2rem, 7vw, 4.4rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 2px 0 #222;
+  display: inline;
+}
+
+.slogan-sub {
+  color: #fff;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-left: 0.5em;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.6), 0 1px 0 #111;
+  display: inline;
+}
+
+.slogan-orange {
+  color: #ff4b0b;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+@media (max-width: 600px) {
+  .banner-container {
+    /* Más largo en móvil */
+    max-height: 420px;  /* Puedes ajustar este valor a lo que prefieras */
+    min-height: 180px;
+    height: 450px;       /* Opcional: puedes usar height fijo en px, por ejemplo height: 220px; */
+  }
+  .banner-image {
+    max-height: 420px;
+    min-height: 180px;
+    height: 450px;       /* O height: 220px; para controlar el largo */
+    aspect-ratio: 2.2 / 1; /* Puedes ajustar el ratio si quieres una imagen más cuadrada o más rectangular */
+  }
+
+  .slogan {
+    font-size: clamp(1.1rem, 4vw, 1.5rem);
+    top: 90%;
+    white-space: nowrap;  /* Sigue forzando una línea en móvil */
+  }
+  .slogan-main {
+    font-size: clamp(1.4rem, 6vw, 2rem);
+  }
+  .slogan-sub {
+    font-size: clamp(1rem, 4vw, 1.3rem);
+  }
 }

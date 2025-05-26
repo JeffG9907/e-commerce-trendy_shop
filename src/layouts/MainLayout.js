@@ -1,9 +1,10 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
-import bannerImage from '../assets/banner.jpg';
+import bannerImage from '../assets/banner.webp';
 import Typography from '@mui/material/Typography';
 import Navbar from '../components/Navbar';
+
 
 const MainLayout = ({ children }) => {
   const location = useLocation();
@@ -16,11 +17,17 @@ const MainLayout = ({ children }) => {
         <Box className="banner-container">
           <img 
             src={bannerImage}
-            alt="Fashion Banner" 
+            alt="Banner de la tienda"
+            loading="lazy"
             className="banner-image"
           />
           <Typography variant="h2" className="slogan">
-            Imponente, como tú
+            <span className="slogan-main" style={{display: "inline"}}>
+              IMPON<span className="slogan-orange">E</span>NTE, 
+            </span>
+            <span className="slogan-sub" style={{display: "inline", marginLeft: "0.5em"}}>
+              como t<span className="slogan-orange">ú</span>
+            </span>
           </Typography>
         </Box>
       )}

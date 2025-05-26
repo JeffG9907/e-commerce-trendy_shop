@@ -39,8 +39,9 @@ const convertGoogleDriveUrl = (url) => {
 function Checkout() {
   // Inicializa el estado con valores predeterminados
   const location = useLocation();
-  const { shippingAddress = {}, cartItems = [], total: initialTotal = 0 } = location.state || {};
-  const [shippingCost, setShippingCost] = useState(0);
+  const { shippingAddress = {}, cartItems = [], subtotal: initialBubTotal = 0,  total: initialTotal = 0 } = location.state || {};
+  const [shippingCost, setShippingCost] = useState(initialBubTotal);
+  const [subTotal, setSubTotal] = useState(0);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
   const [paymentType, setPaymentType] = useState('');
@@ -157,6 +158,7 @@ function Checkout() {
     const totalWithShipping = itemsTotal + shippingCost;
     console.log("Costo total de productos:", itemsTotal);
     console.log("Costo de envío:", shippingCost);
+    setSubTotal(itemsTotal); // Actualiza el subtotal
     setTotal(totalWithShipping); // Actualiza el total incluyendo el costo de envío
   };
 
@@ -195,6 +197,7 @@ function Checkout() {
         orderNumber,
         userId: user.uid,
         items: cartItems,
+        subtotal: parseFloat(subTotal.toFixed(2)),
         total: parseFloat(total.toFixed(2)),
         shippingCost: parseFloat(shippingCost.toFixed(2)),
         paymentMethod: paymentType,

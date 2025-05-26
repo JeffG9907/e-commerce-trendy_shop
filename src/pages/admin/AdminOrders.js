@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container, Typography, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, Paper, CircularProgress,
@@ -10,16 +10,21 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import { es } from 'date-fns/locale';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-import autoTable from 'jspdf-autotable';
 import { getFirestore, collection, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 import logo from '../../assets/perfil_1.png';
 import logo_1 from '../../assets/perfil_1.1.png';
 import { useTheme, useMediaQuery } from '@mui/material';
 
+// Importa las utilidades de generación de PDF
+import {
+  generateOrderPDFNormal,
+  generateOrderPDFThermal
+} from '../../components/admin/pdfUtils';
+
+// Importa el componente de crear orden manual
+import CreateOrderDialog from '../../components/admin/CreateOrderDialog';
+
 function Orders() {
-  // Add these near the top with other state declarations
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
@@ -36,9 +41,11 @@ function Orders() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [pickupTime, setPickupTime] = useState(null);
   const [companyInfo, setCompanyInfo] = useState(null);
-  const db = getFirestore();
 
-  const pdfContentRef = useRef(null);
+  // Estado para el diálogo de creación manual
+  const [openCreateOrder, setOpenCreateOrder] = useState(false);
+
+  const db = getFirestore();
 
   // Función para obtener la información de la empresa
   const fetchCompanyInfo = async () => {
@@ -54,7 +61,6 @@ function Orders() {
     }
   };
 
-
   const orderStatuses = [
     { value: 'review', label: 'En Revisión' },
     { value: 'paid', label: 'Pago Recibido' },
@@ -63,6 +69,7 @@ function Orders() {
     { value: 'delivered', label: 'Orden Recibida' },
   ];
 
+  // Traer órdenes y asociar usuario
   const fetchOrders = async () => {
     try {
       const snapshot = await getDocs(collection(db, 'orders'));
@@ -142,8 +149,8 @@ function Orders() {
       await updateDoc(doc(db, 'orders', currentOrder.id), {
         status: 'shipped',
         transport,
-        arrivalDate: selectedDate.toISOString(), // Guardar día de llegada como ISO string
-        pickupTime: pickupTime.toISOString(), // Guardar hora de retiro como ISO string
+        arrivalDate: selectedDate.toISOString(),
+        pickupTime: pickupTime.toISOString(),
       });
 
       // Actualizar el estado de las órdenes en la interfaz
@@ -169,6 +176,7 @@ function Orders() {
     }
   };
 
+  // Filtros de búsqueda
   const applyFilters = () => {
     let filtered = orders;
 
@@ -186,7 +194,13 @@ function Orders() {
           (order.userData?.lastName &&
             order.userData.lastName
               .toLowerCase()
-              .includes(searchTerm.toLowerCase()))
+              .includes(searchTerm.toLowerCase())) ||
+          (order.cedula &&
+            order.cedula.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (order.customerName &&
+            order.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (order.customerLastname &&
+            order.customerLastname.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -213,282 +227,26 @@ function Orders() {
 
   // useEffect para cargar la información de la empresa y las órdenes
   useEffect(() => {
-    fetchCompanyInfo(); // Obtiene los datos de la empresa
-    fetchOrders(); // Obtiene los datos de las órdenes
+    fetchCompanyInfo();
+    fetchOrders();
   }, []);
 
-  // Función para generar el PDF con html2canvas
-  const generatePDF = async (order) => {
-    const doc = new jsPDF();
-    let yPos = 20;
-
-    // Add logos side by side
-    const logoWidth = 30;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-
-    // Left logo
-    doc.addImage(logo, 'PNG', margin, yPos, logoWidth, 30);
-    
-    // Right logo
-    doc.addImage(logo_1, 'PNG', pageWidth - margin - logoWidth, yPos, logoWidth, 30);
-
-    // Add company info in the center
-    if (companyInfo) {
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text(companyInfo.description || '', pageWidth / 2, yPos + 10, { align: 'center' });
-      yPos += 35;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(companyInfo.address || '', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 7;
-      doc.text(companyInfo.phone || '', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 7;
-      doc.text(companyInfo.email || '', pageWidth / 2, yPos, { align: 'center' });
-      yPos += 15;
-    }
-
-    // Add order details
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`ORDEN #${order.orderNumber || order.id || 'N/A'}`, margin, yPos);
-    yPos += 10;
-
-    // Add customer info
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    if (order.userData) {
-      doc.text(`Cliente: ${order.userData.firstName} ${order.userData.lastName}`, margin, yPos);
-      yPos += 7;
-      doc.text(`CI/RUC: ${order.userData.cedula || 'N/A'}`, margin, yPos);
-      yPos += 7;
-      doc.text(`Email: ${order.userData.email || 'N/A'}`, margin, yPos);
-      yPos += 7;
-      doc.text(`Teléfono: ${order.userData.phone || 'N/A'}`, margin, yPos);
-      yPos += 15;
-    }
-
-    // Add items table
-    const columns = ['Código', 'Producto', 'Cantidad', 'Precio Unit.', 'Total'];
-    const data = order.items?.map(item => [
-      item.productId || 'N/A',
-      item.productName || item.name || 'N/A',
-      item.quantity || 0,
-      `$${(item.price || 0).toFixed(2)}`,
-      `$${((item.quantity || 0) * (item.price || 0)).toFixed(2)}`
-    ]);
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [columns],
-      body: data || [],
-      theme: 'grid',
-      styles: {
-        fontSize: 8,
-        cellPadding: 2
-      },
-      headStyles: {
-        fillColor: [0, 0, 0],
-        textColor: 255,
-        fontSize: 9,
-        fontStyle: 'bold'
-      },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 20 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 }
-      }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 10;
-
-    // Add totals
-    const totalsX = pageWidth - margin - 40;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Subtotal:', totalsX, yPos);
-    doc.text(`$${(order.subtotal || 0).toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
-    yPos += 7;
-
-    doc.text('IVA (12%):', totalsX, yPos);
-    doc.text(`$${(order.tax || 0).toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
-    yPos += 7;
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL:', totalsX, yPos);
-    doc.text(`$${(order.total || 0).toFixed(2)}`, pageWidth - margin, yPos, { align: 'right' });
-    yPos += 20;
-
-    // Add thank you message
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(10);
-    doc.text("Gracias por elegir TRENDY SHOP", pageWidth / 2, yPos, { align: 'center' });
-    yPos += 5; // Add spacing between lines
-    doc.text("¡Estilo, calidad y actitud en cada prenda!", pageWidth / 2, yPos, { align: 'center' });
-
-    // Save the PDF
-    doc.save(`order-${order.orderNumber}.pdf`);
+  // -------- GENERACIÓN DE PDF NORMAL --------
+  const handleGeneratePDFNormal = (order) => {
+    generateOrderPDFNormal(order, companyInfo, logo, logo_1);
   };
 
-  // Add this function after generatePDF function
-  const generateThermalPDF = async (order) => {
-    try {
-      // Create PDF with thermal paper dimensions (50mm width, auto height)
-      const pdf = new jsPDF({
-        unit: "mm",
-        format: [50, 150], // Initial height, will adjust based on content
-        orientation: "portrait",
-      });
-  
-      const pageWidth = 50;
-      const margin = 2;
-      let yPos = -7;
-      const lineHeight = 3;
-  
-      // Logo
-      const rightImg = new Image();
-      rightImg.src = logo_1;
-      rightImg.onload = () => {
-        // Add centered logo with better proportions
-        pdf.addImage(
-          rightImg,
-          "PNG",
-          margin + 1.5, // Center the 45mm wide image
-          yPos,
-          45,
-          35
-        );
-        yPos += 30;
-  
-        // Company info with better formatting
-        if (companyInfo) {
-          pdf.setFont("helvetica", "bold");
-          pdf.setFontSize(8);
-          pdf.text(companyInfo.description || "Descripción de la Empresa", pageWidth / 2, yPos, { align: "center" }
-          );
-          yPos += lineHeight;
-          
-          pdf.setFont("helvetica", "normal");
-          pdf.setFontSize(6);
-          pdf.text(companyInfo.address || "", pageWidth / 2, yPos, { align: "center" });
-          yPos += lineHeight;
-          pdf.text(companyInfo.phone || "", pageWidth / 2, yPos, { align: "center" });
-          yPos += lineHeight;
-          pdf.text(companyInfo.email || "N/A" , pageWidth / 2, yPos, { align: "center" });
-          yPos += lineHeight;
-        }
-  
-        // Divider line
-        yPos += 1;
-        pdf.setLineWidth(0.1);
-        pdf.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += lineHeight;
-  
-        // Order details
-        pdf.setFontSize(8);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(`ORDEN #${order.orderNumber || order.id || 'N/A'}`, pageWidth / 2, yPos, { align: "center" });
-        yPos += lineHeight;
-
-        // Divider line
-        yPos += 1;
-        pdf.setLineWidth(0.1);
-        pdf.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += lineHeight;
-  
-        pdf.setFontSize(7);
-        pdf.text("Fecha:", margin, yPos);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(`${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}`, margin + 14, yPos);
-        yPos += lineHeight;
-
-        pdf.setFont("helvetica", "bold");
-        pdf.text("No. Cédula:", margin, yPos);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(`${order.userData?.cedula || 'N/A'}`, margin + 14, yPos);
-        yPos += lineHeight;
-  
-        pdf.setFont("helvetica", "bold");
-        pdf.text("Cliente:", margin, yPos);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(`${order.userData?.firstName} ${order.userData?.lastName}`, margin + 14, yPos);
-        yPos += lineHeight;
-  
-        pdf.setFont("helvetica", "bold");
-        pdf.text("No. Celular:", margin, yPos);
-        pdf.setFont("helvetica", "normal");
-        pdf.text(`${order.userData?.phone || 'N/A'}`, margin + 14, yPos);
-        yPos += lineHeight;
-
-        // Divider line
-        yPos += 1;
-        pdf.setLineWidth(0.1);
-        pdf.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += lineHeight;
-
-        // Items header
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(7);
-        pdf.text("DETALLE DE PRODUCTOS", pageWidth / 2, yPos, { align: "center" });
-        yPos += lineHeight;
-
-        // Items
-        pdf.setFontSize(6);
-        order.items?.forEach((item) => {
-          const itemTotal = (item.quantity || 0) * (item.price || 0);
-          
-          pdf.setFont("helvetica", "bold");
-          pdf.text(item.productName || item.name || "N/A", margin, yPos);
-          yPos += lineHeight;
-          
-          pdf.setFont("helvetica", "normal");
-          pdf.text(`${item.quantity || 0} x $${(item.price || 0).toFixed(2)}`, margin, yPos);
-          pdf.text(`$${itemTotal.toFixed(2)}`, pageWidth - margin - 10, yPos, { align: "right" });
-          yPos += lineHeight;
-        });
-
-        // Divider line
-        yPos += 1;
-        pdf.setLineWidth(0.1);
-        pdf.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += lineHeight;
-
-        // Totals
-        pdf.setFontSize(7);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("Subtotal:", margin, yPos);
-        pdf.text(`$${(order.subtotal || 0).toFixed(2)}`, pageWidth - margin - 10, yPos, { align: "right" });
-        yPos += lineHeight;
-
-        pdf.text("IVA (12%):", margin, yPos);
-        pdf.text(`$${(order.tax || 0).toFixed(2)}`, pageWidth - margin - 10, yPos, { align: "right" });
-        yPos += lineHeight;
-
-        pdf.setFontSize(8);
-        pdf.text("TOTAL:", margin, yPos);
-        pdf.text(`$${(order.total || 0).toFixed(2)}`, pageWidth - margin - 10, yPos, { align: "right" });
-        yPos += lineHeight * 2;
-
-        // Thank you message
-        pdf.setFontSize(7);
-        pdf.setFont("helvetica", "italic");
-        pdf.text("Gracias por elegir TRENDY SHOP", pageWidth / 2, yPos, { align: 'center' });
-        yPos += 5; // Add spacing between lines
-        pdf.text("¡Estilo, calidad y actitud en cada prenda!", pageWidth / 2, yPos, { align: 'center' });
-
-        // Save the PDF
-        pdf.save(`thermal-order-${order.orderNumber}.pdf`);
-      };
-    } catch (error) {
-      console.error("Error generating thermal PDF:", error);
-      alert("Error al generar el PDF térmico");
-    }
+  // -------- GENERACIÓN DE PDF TÉRMICO --------
+  const handleGeneratePDFThermal = (order) => {
+    generateOrderPDFThermal(order, companyInfo, logo_1);
   };
-  
+
+  // Cuando se crea una orden, recarga las órdenes
+  const handleOrderCreated = () => {
+    setOpenCreateOrder(false);
+    fetchOrders();
+  };
+
   return (
     <Container maxWidth="lg">
       <Typography variant="h4" component="h1" gutterBottom>
@@ -530,6 +288,20 @@ function Orders() {
             fullWidth={isMobile}
           />
         </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setOpenCreateOrder(true)}
+          sx={{ mb: 2 }}
+        >
+          Crear Orden
+        </Button>
+
+        <CreateOrderDialog
+          open={openCreateOrder}
+          onClose={() => setOpenCreateOrder(false)}
+          onOrderCreated={handleOrderCreated}
+        />
       </Box>
 
       <TableContainer 
@@ -540,7 +312,7 @@ function Orders() {
           borderRadius: 2, 
           overflow: 'auto',
           '& .MuiTable-root': {
-            minWidth: 1200, // Makes table scrollable horizontally
+            minWidth: 1200,
           }
         }}
       >
@@ -573,9 +345,9 @@ function Orders() {
                 <TableRow
                   key={order.id}
                   sx={{
-                    backgroundColor: order.status === 'delivered' ? '#d0f0c0' : '#f5f5f5', // Verde claro para "shipped", gris claro para otros
+                    backgroundColor: order.status === 'delivered' ? '#d0f0c0' : '#f5f5f5',
                     '&:hover': {
-                      backgroundColor: order.status === 'delivered' ? '#c8e6b9' : '#e0e0e0', // Hover más oscuro para cada estado
+                      backgroundColor: order.status === 'delivered' ? '#c8e6b9' : '#e0e0e0',
                     },
                   }}
                 >
@@ -594,19 +366,34 @@ function Orders() {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
-                      Cédula: {order.userData?.cedula || 'N/A'}
-                    </Typography>
-                    <Typography variant="body2">
-                      Nombre: {order.userData?.firstName}{' '}
-                      {order.userData?.lastName}
-                    </Typography>
-                    <Typography variant="body2">
-                      Email: {order.userData?.email || 'N/A'}
-                    </Typography>
-                    <Typography variant="body2">
-                      Teléfono: {order.userData?.phone || 'N/A'}
-                    </Typography>
+                    {order.userId && order.userData ? (
+                      <>
+                        <Typography variant="body2">
+                          Cédula: {order.userData.cedula || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Nombre: {order.userData.firstName} {order.userData.lastName}
+                        </Typography>
+                        <Typography variant="body2">
+                          Email: {order.userData.email || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Teléfono: {order.userData.phone || 'N/A'}
+                        </Typography>
+                      </>
+                    ) : (
+                      <>
+                        <Typography variant="body2">
+                          Cédula: {order.cedula || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Nombre: {order.customerName} {order.customerLastname}
+                        </Typography>
+                        <Typography variant="body2">
+                          Email: {order.customerEmail || 'N/A'}
+                        </Typography>
+                      </>
+                    )}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
@@ -625,11 +412,11 @@ function Orders() {
                   <TableCell>
                     {order.items?.map((item, index) => (
                       <Box key={index} sx={{ mb: 1 }}>
-                        <Typography variant="body2">• {item.productName}</Typography>
+                        <Typography variant="body2">• {item.productName || item.name}</Typography>
                         <Typography variant="caption">
-                          Código: {item.productId || 'N/A'}
+                          Código: {item.productId || item.id}
                         </Typography>
-                        <Typography variant="caption">
+                        <Typography variant="caption" sx={{ display: 'block' }}>
                           Cantidad: {item.quantity} x ${item.price?.toFixed(2)}
                         </Typography>
                       </Box>
@@ -685,13 +472,12 @@ function Orders() {
                               alert('Hubo un error al actualizar el estado. Intenta nuevamente.');
                             }
                           } else {
-                            // Mostrar el formulario para otros cambios de estado
                             handleDispatch(order);
                           }
                         }}
                         size="small"
                         displayEmpty
-                        disabled={order.status === 'delivered'} // Deshabilitar si la orden ya está recibida
+                        disabled={order.status === 'delivered'}
                       >
                         {orderStatuses.map((status) => (
                           <MenuItem
@@ -706,15 +492,19 @@ function Orders() {
                         ))}
                       </Select>
                     </FormControl>
+                    {/* Botón para PDF Normal */}
                     <IconButton
                       color="primary"
-                      onClick={() => generatePDF(order)}
+                      onClick={() => handleGeneratePDFNormal(order)}
+                      title="Generar PDF (Normal)"
                     >
                       <PictureAsPdf />
                     </IconButton>
+                    {/* Botón para PDF Térmico */}
                     <IconButton
                       color="primary"
-                      onClick={() => generateThermalPDF(order)}
+                      onClick={() => handleGeneratePDFThermal(order)}
+                      title="Generar PDF Térmico"
                     >
                       <PictureAsPdf />
                     </IconButton>
@@ -726,20 +516,6 @@ function Orders() {
         </Table>
       </TableContainer>
 
-      {orders.map((order) => (
-        <div
-        key={order.id}
-        id={`order-details-${order.id}`}
-        style={{
-          position: "absolute",
-          left: "-9999px",
-          top: "-9999px",
-          padding: "20px",
-          fontFamily: "Arial, sans-serif",
-        }} // Oculta el contenido fuera de la pantalla
-      >
-      </div>
-    ))}
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
         <DialogTitle>Despachar Orden</DialogTitle>
         <DialogContent>

@@ -215,11 +215,11 @@ function Navbar() {
             </Button>
           </Box>
   
-          <IconButton color="inherit" component={Link} to="/cart">
+          <IconButton color="inherit" component={Link} to="/cart" aria-label="Ver carrito">
             <ShoppingCartIcon />
           </IconButton>
           
-          <IconButton color="inherit" onClick={handleMenu}>
+          <IconButton color="inherit" onClick={handleMenu} aria-label={user ? "Abrir menú de usuario" : "Abrir menú de acceso"}>
             {user ? (
               <Avatar sx={{ width: 32, height: 32 }}>
                 {user.email ? user.email[0].toUpperCase() : 'U'}

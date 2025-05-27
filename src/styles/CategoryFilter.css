@@ -339,8 +339,8 @@ body {
 }
 
 .product-actions .details-button {
-  background-color: transparent;
-  color: #007BFF;
+  background-color:  #007BFF;
+  color: #ffffff;
   border: 1px solid #007BFF;
   border-radius: 10px;
   transition: all 0.3s ease-in-out;
@@ -352,8 +352,8 @@ body {
 }
 
 .product-actions .add-cart-button {
-  background-color: transparent;
-  color: #0dff00;
+  background-color: #0dff00;
+  color: #ffffff;
   border: 1px solid #10ff0c;
   border-radius: 10px;
   transition: all 0.3s ease-in-out;

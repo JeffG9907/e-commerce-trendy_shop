@@ -171,7 +171,7 @@ function Navbar() {
 
           <Box className="navbar-brand">
             <Link to="/" onClick={handleNavigation}>
-              <img src={logo} alt="Shop Logo" className="navbar-logo" />
+              <img src={logo} alt="Shop Logo" class="navbar-logo img-fluid" width="120" height="40"></img>
             </Link>
           </Box>
           

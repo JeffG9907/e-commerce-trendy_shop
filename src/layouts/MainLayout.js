@@ -20,6 +20,7 @@ const MainLayout = ({ children }) => {
             alt="Banner de la tienda"
             loading="lazy"
             className="banner-image"
+            width="1920" height="835"
           />
           <Typography variant="h2" className="slogan">
             <span className="slogan-main" style={{display: "inline"}}>
